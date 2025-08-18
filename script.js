@@ -21,7 +21,9 @@ class DashboardApp {
         // Event listeners
         this.loginForm.addEventListener('submit', (e) => this.handleLogin(e));
         this.logoutBtn.addEventListener('click', () => this.handleLogout());
-        this.autoLoginBtn.addEventListener('click', () => this.manuallyAuthenticateWidgets());
+        if (this.autoLoginBtn) {
+            this.autoLoginBtn.addEventListener('click', () => this.manuallyAuthenticateWidgets());
+        }
         
         // Auto-logout after inactivity (30 minutes)
         this.setupAutoLogout();
@@ -152,30 +154,86 @@ class DashboardApp {
                         usernameField.value = username;
                         passwordField.value = password;
                         
-                        // Trigger events
-                        usernameField.dispatchEvent(new Event('input', { bubbles: true }));
-                        passwordField.dispatchEvent(new Event('input', { bubbles: true }));
+                        // Trigger events to ensure the form recognizes the input
+                        const events = ['input', 'change', 'keyup', 'blur'];
+                        events.forEach(eventType => {
+                            usernameField.dispatchEvent(new Event(eventType, { bubbles: true }));
+                            passwordField.dispatchEvent(new Event(eventType, { bubbles: true }));
+                        });
                         
-                        // Submit
+                        // Submit with multiple attempts
                         if (submitButton) {
                             setTimeout(() => {
                                 submitButton.click();
+                                
+                                // Backup submit attempts
+                                setTimeout(() => {
+                                    const form = iframeDoc.querySelector('form');
+                                    if (form) form.submit();
+                                }, 250);
+                                
+                                setTimeout(() => {
+                                    // Try pressing Enter key
+                                    passwordField.dispatchEvent(new KeyboardEvent('keydown', {
+                                        key: 'Enter',
+                                        code: 'Enter',
+                                        which: 13,
+                                        keyCode: 13,
+                                        bubbles: true
+                                    }));
+                                }, 500);
                             }, 500);
                         }
                         
                         console.log(`Authenticated widget: ${iframe.title}`);
                     } else {
-                        console.log(`No login form in widget: ${iframe.title}`);
+                        console.log(`No login form in widget: ${iframe.title} - might already be authenticated`);
+                        // Remove loading indicator even if no form found
+                        this.removeLoadingIndicator(iframe.parentElement.parentElement);
                     }
                 } catch (crossOriginError) {
                     console.log(`Cross-origin restriction for widget: ${iframe.title}`);
+                    // Try postMessage as fallback
+                    iframe.contentWindow.postMessage({
+                        type: 'caspio_login',
+                        username: username,
+                        password: password
+                    }, '*');
+                    
+                    // Remove loading indicator after attempt
+                    setTimeout(() => {
+                        this.removeLoadingIndicator(iframe.parentElement.parentElement);
+                    }, 2000);
                 }
-            }, 1000);
+            }, 1500); // Increased delay for HTTPS
         } catch (error) {
             console.log('Widget authentication error:', error);
         }
     }
 
+    manuallyAuthenticateWidgets() {
+        const username = sessionStorage.getItem('mmvcs_user');
+        const password = sessionStorage.getItem('mmvcs_password');
+        const iframes = document.querySelectorAll('.widget-frame iframe');
+        
+        if (this.autoLoginBtn) {
+            this.autoLoginBtn.textContent = 'Authenticating...';
+            this.autoLoginBtn.disabled = true;
+        }
+        
+        iframes.forEach((iframe, index) => {
+            setTimeout(() => {
+                this.authenticateWidget(iframe, username, password);
+            }, index * 1000);
+        });
+        
+        setTimeout(() => {
+            if (this.autoLoginBtn) {
+                this.autoLoginBtn.textContent = 'Auto-Login All Widgets';
+                this.autoLoginBtn.disabled = false;
+            }
+        }, iframes.length * 1000 + 3000);
+    }
 
     addLoadingIndicator(container) {
         if (container.querySelector('.loading-indicator')) return;
