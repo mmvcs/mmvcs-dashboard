@@ -74,12 +74,43 @@ class DashboardApp {
     }
 
     async authenticateWithMMVCS(username, password) {
-        // For live deployment, use a simplified validation
-        // The widgets will handle their own Caspio authentication
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        // Open Caspio authentication in a new tab
+        const authUrl = 'https://c0acv999.caspio.com/dp/01217000201cfed888f24342b18f';
+        const authWindow = window.open(authUrl, '_blank');
         
-        // Accept any non-empty credentials
-        return username.length > 0 && password.length > 0;
+        return new Promise((resolve) => {
+            // Show modal with instructions
+            const modal = document.createElement('div');
+            modal.innerHTML = `
+                <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); z-index: 10000; display: flex; justify-content: center; align-items: center;">
+                    <div style="background: white; padding: 30px; border-radius: 10px; max-width: 500px; text-align: center;">
+                        <h3>Caspio Authentication Required</h3>
+                        <p>A new tab opened for Caspio login.</p>
+                        <p><strong>Please log in with:</strong><br>Username: ${username}<br>Password: [your password]</p>
+                        <p>After successful login, close the tab and click Continue below.</p>
+                        <button id="auth-continue" style="background: #27ae60; color: white; border: none; padding: 10px 20px; border-radius: 5px; margin: 10px; cursor: pointer;">Continue</button>
+                        <button id="auth-cancel" style="background: #e74c3c; color: white; border: none; padding: 10px 20px; border-radius: 5px; margin: 10px; cursor: pointer;">Cancel</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            
+            document.getElementById('auth-continue').onclick = () => {
+                if (authWindow && !authWindow.closed) {
+                    authWindow.close();
+                }
+                document.body.removeChild(modal);
+                resolve(true);
+            };
+            
+            document.getElementById('auth-cancel').onclick = () => {
+                if (authWindow && !authWindow.closed) {
+                    authWindow.close();
+                }
+                document.body.removeChild(modal);
+                resolve(false);
+            };
+        });
     }
 
     handleLogout() {
