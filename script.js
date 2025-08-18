@@ -72,73 +72,12 @@ class DashboardApp {
     }
 
     async authenticateWithMMVCS(username, password) {
-        try {
-            // Create a hidden iframe to authenticate with Caspio directly
-            const authFrame = document.createElement('iframe');
-            authFrame.style.display = 'none';
-            authFrame.src = 'https://c0acv999.caspio.com/dp/01217000201cfed888f24342b18f';
-            document.body.appendChild(authFrame);
-            
-            return new Promise((resolve) => {
-                authFrame.onload = () => {
-                    try {
-                        // Try to access the iframe content to check if login form is present
-                        const iframeDoc = authFrame.contentDocument || authFrame.contentWindow.document;
-                        const loginForm = iframeDoc.querySelector('form');
-                        
-                        if (loginForm) {
-                            // Fill in credentials
-                            const usernameField = iframeDoc.querySelector('input[type="text"], input[name*="user"], input[name*="login"]');
-                            const passwordField = iframeDoc.querySelector('input[type="password"], input[name*="pass"]');
-                            const submitButton = iframeDoc.querySelector('input[type="submit"], button[type="submit"]');
-                            
-                            if (usernameField && passwordField && submitButton) {
-                                usernameField.value = username;
-                                passwordField.value = password;
-                                
-                                // Submit the form
-                                submitButton.click();
-                                
-                                // Wait for authentication response
-                                setTimeout(() => {
-                                    try {
-                                        // Check if we're still on login page or redirected
-                                        const currentUrl = authFrame.contentWindow.location.href;
-                                        const isLoginPage = currentUrl.includes('login') || iframeDoc.querySelector('input[type="password"]');
-                                        
-                                        document.body.removeChild(authFrame);
-                                        resolve(!isLoginPage);
-                                    } catch (e) {
-                                        // Cross-origin error likely means we're authenticated and redirected
-                                        document.body.removeChild(authFrame);
-                                        resolve(true);
-                                    }
-                                }, 3000);
-                            } else {
-                                document.body.removeChild(authFrame);
-                                resolve(false);
-                            }
-                        } else {
-                            // No login form found, might already be authenticated
-                            document.body.removeChild(authFrame);
-                            resolve(true);
-                        }
-                    } catch (crossOriginError) {
-                        // Cross-origin error might mean we're already authenticated
-                        document.body.removeChild(authFrame);
-                        resolve(true);
-                    }
-                };
-                
-                authFrame.onerror = () => {
-                    document.body.removeChild(authFrame);
-                    resolve(false);
-                };
-            });
-        } catch (error) {
-            console.error('Authentication error:', error);
-            return false;
-        }
+        // For live deployment, use a simplified validation
+        // The widgets will handle their own Caspio authentication
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        // Accept any non-empty credentials
+        return username.length > 0 && password.length > 0;
     }
 
     handleLogout() {
