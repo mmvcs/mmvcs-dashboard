@@ -4,6 +4,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const dashboardContainer = document.getElementById('dashboard-container');
     const loginForm = document.getElementById('login-form');
     const logoutBtn = document.getElementById('logout-btn');
+    const autoLoginBtn = document.getElementById('auto-login-btn');
     
     // Check if user is logged in
     if (sessionStorage.getItem('dashboard_logged_in') === 'true') {
@@ -55,6 +56,18 @@ document.addEventListener('DOMContentLoaded', () => {
         sessionStorage.removeItem('dashboard_user');
         sessionStorage.removeItem('dashboard_password');
         showLogin();
+    });
+    
+    // Auto-login handler
+    autoLoginBtn.addEventListener('click', () => {
+        const username = sessionStorage.getItem('dashboard_user');
+        const password = sessionStorage.getItem('dashboard_password');
+        
+        if (username && password) {
+            autoLoginAllWidgets(username, password);
+        } else {
+            alert('No stored credentials found. Please log out and log back in.');
+        }
     });
     
     async function authenticateWithCaspio(username, password) {
@@ -137,6 +150,60 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }, 10000);
         });
+    }
+    
+    function autoLoginAllWidgets(username, password) {
+        const iframes = document.querySelectorAll('.widget-frame iframe');
+        autoLoginBtn.textContent = 'Authenticating...';
+        autoLoginBtn.disabled = true;
+        
+        iframes.forEach((iframe, index) => {
+            setTimeout(() => {
+                try {
+                    const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                    
+                    // Look for login form
+                    const usernameField = iframeDoc.querySelector('input[type="text"]');
+                    const passwordField = iframeDoc.querySelector('input[type="password"]');
+                    const submitButton = iframeDoc.querySelector('input[type="submit"], button[type="submit"], button');
+                    
+                    if (usernameField && passwordField && submitButton) {
+                        // Fill credentials
+                        usernameField.value = username;
+                        passwordField.value = password;
+                        
+                        // Trigger events
+                        ['input', 'change', 'keyup'].forEach(eventType => {
+                            usernameField.dispatchEvent(new Event(eventType, { bubbles: true }));
+                            passwordField.dispatchEvent(new Event(eventType, { bubbles: true }));
+                        });
+                        
+                        // Submit form
+                        setTimeout(() => {
+                            submitButton.click();
+                        }, 500);
+                        
+                        console.log(`Auto-logged into widget: ${iframe.title}`);
+                    } else {
+                        console.log(`No login form found in widget: ${iframe.title}`);
+                    }
+                } catch (crossOriginError) {
+                    console.log(`Cross-origin restriction for widget: ${iframe.title}`);
+                    // Try postMessage as fallback
+                    iframe.contentWindow.postMessage({
+                        type: 'caspio_login',
+                        username: username,
+                        password: password
+                    }, '*');
+                }
+            }, index * 1500); // Stagger the attempts
+        });
+        
+        // Reset button after all attempts
+        setTimeout(() => {
+            autoLoginBtn.textContent = 'Auto-Login All Widgets';
+            autoLoginBtn.disabled = false;
+        }, iframes.length * 1500 + 2000);
     }
     
     function showLogin() {
