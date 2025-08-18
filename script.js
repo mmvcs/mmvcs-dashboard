@@ -74,43 +74,9 @@ class DashboardApp {
     }
 
     async authenticateWithMMVCS(username, password) {
-        // Open Caspio authentication in a new tab
-        const authUrl = 'https://c0acv999.caspio.com/dp/01217000201cfed888f24342b18f';
-        const authWindow = window.open(authUrl, '_blank');
-        
-        return new Promise((resolve) => {
-            // Show modal with instructions
-            const modal = document.createElement('div');
-            modal.innerHTML = `
-                <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); z-index: 10000; display: flex; justify-content: center; align-items: center;">
-                    <div style="background: white; padding: 30px; border-radius: 10px; max-width: 500px; text-align: center;">
-                        <h3>Caspio Authentication Required</h3>
-                        <p>A new tab opened for Caspio login.</p>
-                        <p><strong>Please log in with:</strong><br>Username: ${username}<br>Password: [your password]</p>
-                        <p>After successful login, close the tab and click Continue below.</p>
-                        <button id="auth-continue" style="background: #27ae60; color: white; border: none; padding: 10px 20px; border-radius: 5px; margin: 10px; cursor: pointer;">Continue</button>
-                        <button id="auth-cancel" style="background: #e74c3c; color: white; border: none; padding: 10px 20px; border-radius: 5px; margin: 10px; cursor: pointer;">Cancel</button>
-                    </div>
-                </div>
-            `;
-            document.body.appendChild(modal);
-            
-            document.getElementById('auth-continue').onclick = () => {
-                if (authWindow && !authWindow.closed) {
-                    authWindow.close();
-                }
-                document.body.removeChild(modal);
-                resolve(true);
-            };
-            
-            document.getElementById('auth-cancel').onclick = () => {
-                if (authWindow && !authWindow.closed) {
-                    authWindow.close();
-                }
-                document.body.removeChild(modal);
-                resolve(false);
-            };
-        });
+        // Simple validation - let widgets handle their own authentication
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        return username.length > 0 && password.length > 0;
     }
 
     handleLogout() {
@@ -145,21 +111,14 @@ class DashboardApp {
 
     loadWidgets() {
         const iframes = document.querySelectorAll('.widget-frame iframe');
-        const username = sessionStorage.getItem('mmvcs_user');
-        const password = sessionStorage.getItem('mmvcs_password');
         
         iframes.forEach((iframe, index) => {
-            // Add loading indicator
-            this.addLoadingIndicator(iframe.parentElement);
-            
-            // Set up load event listener
+            // Set up load event listener to remove loading indicator
             iframe.addEventListener('load', () => {
-                this.removeLoadingIndicator(iframe.parentElement);
-                
-                // Try to authenticate each widget individually
+                // Remove loading indicator when iframe loads
                 setTimeout(() => {
-                    this.authenticateWidget(iframe, username, password);
-                }, 2000);
+                    this.removeLoadingIndicator(iframe.parentElement);
+                }, 1000);
             });
             
             // Set up error handling
@@ -167,6 +126,29 @@ class DashboardApp {
                 this.handleWidgetError(iframe.parentElement, iframe.title);
             });
         });
+        
+        // Show instruction to user
+        setTimeout(() => {
+            const instruction = document.createElement('div');
+            instruction.style.cssText = `
+                position: fixed; top: 20px; right: 20px; background: #f39c12; color: white; 
+                padding: 15px; border-radius: 5px; z-index: 1000; max-width: 300px;
+                box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            `;
+            instruction.innerHTML = `
+                <strong>Authentication Required</strong><br>
+                Please log in to each widget using your MMVCS credentials when prompted.
+                <button onclick="this.parentElement.remove()" style="float: right; background: none; border: none; color: white; cursor: pointer; font-size: 16px;">×</button>
+            `;
+            document.body.appendChild(instruction);
+            
+            // Auto-remove after 10 seconds
+            setTimeout(() => {
+                if (document.body.contains(instruction)) {
+                    document.body.removeChild(instruction);
+                }
+            }, 10000);
+        }, 2000);
     }
 
     authenticateWidget(iframe, username, password) {
