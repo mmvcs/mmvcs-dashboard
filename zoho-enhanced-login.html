@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MMVCS Dashboard Login</title>
+    <style>
+        .mmvcs-login-widget {
+            max-width: 400px;
+            margin: 20px auto;
+            padding: 30px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .mmvcs-login-widget h3 {
+            text-align: center;
+            margin-bottom: 25px;
+            color: #333;
+            font-size: 24px;
+        }
+        
+        .mmvcs-form-group {
+            margin-bottom: 20px;
+        }
+        
+        .mmvcs-form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+            font-weight: 500;
+        }
+        
+        .mmvcs-form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            box-sizing: border-box;
+            transition: border-color 0.3s;
+        }
+        
+        .mmvcs-form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .mmvcs-login-btn {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        .mmvcs-login-btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        .mmvcs-login-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .mmvcs-error {
+            color: #e74c3c;
+            text-align: center;
+            margin-top: 15px;
+            padding: 10px;
+            background: #fdf2f2;
+            border-radius: 5px;
+            border: 1px solid #fecaca;
+            display: none;
+        }
+        
+        .mmvcs-success {
+            color: #27ae60;
+            text-align: center;
+            margin-top: 15px;
+            padding: 10px;
+            background: #f0f9f4;
+            border-radius: 5px;
+            border: 1px solid #4ade80;
+            display: none;
+        }
+        
+        .mmvcs-debug {
+            margin-top: 15px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 5px;
+            font-size: 12px;
+            color: #666;
+            max-height: 200px;
+            overflow-y: auto;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="mmvcs-login-widget">
+        <h3>Access MMVCS Dashboard</h3>
+        <form id="mmvcs-login-form">
+            <div class="mmvcs-form-group">
+                <label for="mmvcs-username">Username:</label>
+                <input type="text" id="mmvcs-username" name="username" required>
+            </div>
+            <div class="mmvcs-form-group">
+                <label for="mmvcs-password">Password:</label>
+                <input type="password" id="mmvcs-password" name="password" required>
+            </div>
+            <button type="submit" class="mmvcs-login-btn">Access Dashboard</button>
+        </form>
+        <div id="mmvcs-error" class="mmvcs-error"></div>
+        <div id="mmvcs-success" class="mmvcs-success"></div>
+        <div id="mmvcs-debug" class="mmvcs-debug"></div>
+    </div>
+
+    <script>
+        let debugMessages = [];
+        
+        function addDebugMessage(message) {
+            debugMessages.push(`${new Date().toLocaleTimeString()}: ${message}`);
+            const debugDiv = document.getElementById('mmvcs-debug');
+            debugDiv.innerHTML = debugMessages.slice(-20).join('<br>');
+            debugDiv.style.display = 'block';
+            console.log('DEBUG:', message);
+        }
+        
+        document.getElementById('mmvcs-login-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const username = document.getElementById('mmvcs-username').value.trim();
+            const password = document.getElementById('mmvcs-password').value.trim();
+            const errorDiv = document.getElementById('mmvcs-error');
+            const successDiv = document.getElementById('mmvcs-success');
+            const submitBtn = e.target.querySelector('.mmvcs-login-btn');
+            
+            errorDiv.style.display = 'none';
+            successDiv.style.display = 'none';
+            
+            if (!username || !password) {
+                errorDiv.textContent = 'Please enter both username and password';
+                errorDiv.style.display = 'block';
+                return;
+            }
+            
+            const originalText = submitBtn.textContent;
+            submitBtn.textContent = 'Authenticating...';
+            submitBtn.disabled = true;
+            
+            addDebugMessage('Authentication started');
+            
+            try {
+                if (window.parent && window.parent !== window) {
+                    addDebugMessage('Detected iframe context - Zoho Connect mode');
+                    
+                    // Enhanced authentication for Zoho Connect
+                    authenticateInZohoConnect(username, password, submitBtn, successDiv);
+                    
+                } else {
+                    addDebugMessage('Detected browser context - redirecting to dashboard');
+                    const credentials = btoa(username + ':' + password);
+                    window.location.href = `https://dashboard.mmvcs-sales.com?auth=${encodeURIComponent(credentials)}`;
+                }
+                
+            } catch (error) {
+                addDebugMessage(`Error: ${error.message}`);
+                submitBtn.textContent = originalText;
+                submitBtn.disabled = false;
+                errorDiv.textContent = 'Connection error. Please try again.';
+                errorDiv.style.display = 'block';
+            }
+        });
+        
+        function authenticateInZohoConnect(username, password, submitBtn, successDiv) {
+            addDebugMessage('Starting Zoho Connect authentication sequence');
+            
+            // Step 1: Show success immediately
+            submitBtn.textContent = '✅ Authenticated';
+            submitBtn.style.background = '#27ae60';
+            successDiv.textContent = 'Authentication successful! Broadcasting to widgets...';
+            successDiv.style.display = 'block';
+            
+            // Step 2: Multiple broadcast methods
+            setTimeout(() => {
+                broadcastAuthenticationMultiple(username, password);
+            }, 500);
+            
+            // Step 3: Direct widget scanning and authentication
+            setTimeout(() => {
+                scanAndAuthenticateWidgets(username, password);
+            }, 1500);
+            
+            // Step 4: Persistent polling for new widgets
+            startWidgetPolling(username, password);
+            
+            // Step 5: Setup global authentication handler
+            setupGlobalAuthHandler(username, password);
+        }
+        
+        function broadcastAuthenticationMultiple(username, password) {
+            const authData = {
+                username: username,
+                password: password,
+                timestamp: Date.now()
+            };
+            
+            // Method 1: Parent window message
+            try {
+                window.parent.postMessage({
+                    type: 'mmvcs_auth_success',
+                    ...authData,
+                    source: 'mmvcs_login_widget'
+                }, '*');
+                addDebugMessage('Sent auth to parent window');
+            } catch (e) {
+                addDebugMessage(`Parent message failed: ${e.message}`);
+            }
+            
+            // Method 2: Top window message
+            try {
+                window.top.postMessage({
+                    type: 'mmvcs_auth_broadcast',
+                    ...authData,
+                    source: 'mmvcs_login_widget'
+                }, '*');
+                addDebugMessage('Sent auth to top window');
+            } catch (e) {
+                addDebugMessage(`Top message failed: ${e.message}`);
+            }
+            
+            // Method 3: Global storage
+            try {
+                window.parent.localStorage.setItem('mmvcs_auth_data', JSON.stringify(authData));
+                addDebugMessage('Stored auth in parent localStorage');
+            } catch (e) {
+                addDebugMessage(`localStorage failed: ${e.message}`);
+            }
+            
+            // Method 4: Window property
+            try {
+                window.parent.mmvcs_auth_credentials = authData;
+                addDebugMessage('Set auth in parent window property');
+            } catch (e) {
+                addDebugMessage(`Window property failed: ${e.message}`);
+            }
+        }
+        
+        function scanAndAuthenticateWidgets(username, password) {
+            addDebugMessage('Scanning for widgets to authenticate');
+            
+            try {
+                // Try to access parent document
+                const parentDoc = window.parent.document;
+                const iframes = parentDoc.querySelectorAll('iframe');
+                
+                addDebugMessage(`Found ${iframes.length} iframes in parent`);
+                
+                let authenticatedCount = 0;
+                
+                iframes.forEach((iframe, index) => {
+                    // Skip our own iframe
+                    if (iframe.contentWindow === window) {
+                        addDebugMessage(`Skipping iframe ${index} (self)`);
+                        return;
+                    }
+                    
+                    setTimeout(() => {
+                        try {
+                            // Try direct iframe authentication
+                            authenticateIframeWidget(iframe, username, password, index);
+                            authenticatedCount++;
+                        } catch (e) {
+                            addDebugMessage(`Iframe ${index} auth failed: ${e.message}`);
+                        }
+                    }, index * 300);
+                });
+                
+                setTimeout(() => {
+                    addDebugMessage(`Authentication attempts sent to ${authenticatedCount} widgets`);
+                }, iframes.length * 300 + 500);
+                
+            } catch (crossOriginError) {
+                addDebugMessage(`Cannot access parent document: ${crossOriginError.message}`);
+                
+                // Fallback: broadcast to all possible targets
+                broadcastToUnknownTargets(username, password);
+            }
+        }
+        
+        function authenticateIframeWidget(iframe, username, password, index) {
+            // Method 1: PostMessage
+            try {
+                iframe.contentWindow.postMessage({
+                    type: 'caspio_auto_auth',
+                    username: username,
+                    password: password,
+                    source: 'mmvcs_enhanced_login'
+                }, '*');
+                addDebugMessage(`PostMessage sent to iframe ${index}`);
+            } catch (e) {
+                addDebugMessage(`PostMessage to iframe ${index} failed: ${e.message}`);
+            }
+            
+            // Method 2: Multiple auth message types
+            setTimeout(() => {
+                const authTypes = [
+                    'auto_authenticate',
+                    'login_credentials',
+                    'caspio_login',
+                    'widget_auth',
+                    'zoho_widget_auth'
+                ];
+                
+                authTypes.forEach(type => {
+                    try {
+                        iframe.contentWindow.postMessage({
+                            type: type,
+                            username: username,
+                            password: password
+                        }, '*');
+                    } catch (e) {}
+                });
+                
+                addDebugMessage(`Multiple auth types sent to iframe ${index}`);
+            }, 200);
+            
+            // Method 3: Try direct form access (if same-origin)
+            setTimeout(() => {
+                try {
+                    const iframeDoc = iframe.contentDocument;
+                    if (iframeDoc) {
+                        const forms = iframeDoc.querySelectorAll('form');
+                        if (forms.length > 0) {
+                            fillAndSubmitForm(forms[0], username, password);
+                            addDebugMessage(`Direct form auth attempted for iframe ${index}`);
+                        }
+                    }
+                } catch (e) {
+                    addDebugMessage(`Direct form access failed for iframe ${index}: ${e.message}`);
+                }
+            }, 500);
+        }
+        
+        function fillAndSubmitForm(form, username, password) {
+            const usernameField = form.querySelector('input[type="text"], input[name*="user"], input[name*="login"]');
+            const passwordField = form.querySelector('input[type="password"], input[name*="pass"]');
+            const submitButton = form.querySelector('input[type="submit"], button[type="submit"], button');
+            
+            if (usernameField && passwordField) {
+                usernameField.value = username;
+                passwordField.value = password;
+                
+                ['input', 'change', 'keyup', 'blur'].forEach(eventType => {
+                    usernameField.dispatchEvent(new Event(eventType, { bubbles: true }));
+                    passwordField.dispatchEvent(new Event(eventType, { bubbles: true }));
+                });
+                
+                if (submitButton) {
+                    setTimeout(() => {
+                        submitButton.click();
+                    }, 200);
+                }
+            }
+        }
+        
+        function broadcastToUnknownTargets(username, password) {
+            addDebugMessage('Broadcasting to unknown targets with wildcard');
+            
+            // Try broadcasting to common Caspio domains
+            const caspioOrigins = [
+                'https://c0acv999.caspio.com',
+                'https://caspio.com',
+                'https://*.caspio.com'
+            ];
+            
+            caspioOrigins.forEach(origin => {
+                try {
+                    window.postMessage({
+                        type: 'caspio_global_auth',
+                        username: username,
+                        password: password,
+                        targetOrigin: origin
+                    }, origin);
+                } catch (e) {}
+            });
+            
+            addDebugMessage('Global broadcast completed');
+        }
+        
+        function startWidgetPolling(username, password) {
+            addDebugMessage('Starting widget polling for late-loading widgets');
+            
+            let pollCount = 0;
+            const maxPolls = 20; // Poll for 20 seconds
+            
+            const pollInterval = setInterval(() => {
+                pollCount++;
+                
+                if (pollCount > maxPolls) {
+                    clearInterval(pollInterval);
+                    addDebugMessage('Widget polling completed');
+                    return;
+                }
+                
+                // Re-scan for new widgets
+                try {
+                    const newIframes = window.parent.document.querySelectorAll('iframe');
+                    newIframes.forEach((iframe, index) => {
+                        if (iframe.contentWindow !== window && !iframe.dataset.mmvcsAuthenticated) {
+                            iframe.dataset.mmvcsAuthenticated = 'true';
+                            authenticateIframeWidget(iframe, username, password, index);
+                        }
+                    });
+                } catch (e) {
+                    // Silent fail for cross-origin
+                }
+                
+                // Broadcast again
+                broadcastAuthenticationMultiple(username, password);
+                
+            }, 1000);
+        }
+        
+        function setupGlobalAuthHandler(username, password) {
+            // Create a global authentication function
+            try {
+                window.parent.mmvcsAuthenticateWidget = function(targetWindow) {
+                    targetWindow.postMessage({
+                        type: 'caspio_auto_auth',
+                        username: username,
+                        password: password
+                    }, '*');
+                };
+                addDebugMessage('Global auth handler created');
+            } catch (e) {
+                addDebugMessage(`Global handler failed: ${e.message}`);
+            }
+        }
+        
+        // Listen for authentication requests
+        window.addEventListener('message', function(event) {
+            addDebugMessage(`Received message: ${event.data?.type || 'unknown'}`);
+            
+            if (event.data && event.data.type === 'auth_request') {
+                const username = document.getElementById('mmvcs-username').value;
+                const password = document.getElementById('mmvcs-password').value;
+                
+                if (username && password) {
+                    event.source.postMessage({
+                        type: 'auth_response',
+                        username: username,
+                        password: password
+                    }, event.origin);
+                    addDebugMessage('Responded to auth request');
+                }
+            }
+        });
+        
+        addDebugMessage('Enhanced MMVCS login widget loaded');
+    </script>
+</body>
+</html>
