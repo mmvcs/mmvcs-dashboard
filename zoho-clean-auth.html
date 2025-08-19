@@ -144,7 +144,9 @@ function authenticate() {
     broadcastAuthentication(username, password);
     
     // Send to dashboard
+    alert('About to schedule dashboard sending in 500ms');
     setTimeout(function() {
+        alert('Dashboard timeout triggered, calling sendToDashboard');
         sendToDashboard(username, password);
     }, 500);
     
