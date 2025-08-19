@@ -70,10 +70,44 @@ function authenticate() {
     // Try to broadcast
     broadcastAuthentication(username, password);
     
+    // Also send to dashboard
+    setTimeout(function() {
+        sendToDashboard(username, password);
+    }, 500);
+    
     // Start looking for and authenticating forms
     setTimeout(function() {
         findAndAuthenticateForms(username, password);
     }, 1000);
+}
+
+function sendToDashboard(username, password) {
+    // Encode credentials for dashboard URL
+    var credentials = btoa(username + ':' + password);
+    var dashboardUrl = 'https://dashboard.mmvcs-sales.com?auth=' + encodeURIComponent(credentials);
+    
+    updateAuthStatus('✓ Auth sent to dashboard & widgets', 'green');
+    
+    // Option 1: Open dashboard in new tab/window
+    try {
+        window.open(dashboardUrl, 'mmvcs_dashboard', 'width=1200,height=800,scrollbars=yes,resizable=yes');
+        console.log('Opened dashboard in new window');
+    } catch (e) {
+        console.log('Could not open dashboard window:', e.message);
+    }
+    
+    // Option 2: Also try to send message if dashboard is already open
+    try {
+        // Send message to any open dashboard windows
+        if (window.parent && window.parent !== window) {
+            window.parent.postMessage({
+                type: 'mmvcs_dashboard_auth',
+                username: username,
+                password: password,
+                dashboardUrl: dashboardUrl
+            }, '*');
+        }
+    } catch (e) {}
 }
 
 function broadcastAuthentication(username, password) {
