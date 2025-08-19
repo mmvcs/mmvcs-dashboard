@@ -45,8 +45,12 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function autoAuthenticateAllWidgets(username, password) {
+    console.log('AUTO-AUTH: Starting with username:', username);
+    
     // Find all Caspio widgets that might need authentication
     const widgets = document.querySelectorAll('.widget-frame');
+    console.log('AUTO-AUTH: Found', widgets.length, 'widgets');
+    
     let authAttempts = 0;
     const maxAttempts = 10; // Try for up to 10 seconds
     
@@ -54,20 +58,28 @@ function autoAuthenticateAllWidgets(username, password) {
         let authenticatedCount = 0;
         
         widgets.forEach((widget, index) => {
+            console.log('AUTO-AUTH: Checking widget', index);
+            
             // Look for iframes or embedded content within each widget
             const iframe = widget.querySelector('iframe');
             const forms = widget.querySelectorAll('form');
             
+            console.log('AUTO-AUTH: Widget', index, 'has iframe:', !!iframe, 'forms:', forms.length);
+            
             if (iframe) {
+                console.log('AUTO-AUTH: Attempting iframe auth for widget', index);
                 // Try to authenticate iframe
                 authenticateIframe(iframe, username, password);
                 authenticatedCount++;
             } else if (forms.length > 0) {
+                console.log('AUTO-AUTH: Attempting form auth for widget', index);
                 // Try to authenticate forms directly in the widget
                 forms.forEach(form => {
                     authenticateForm(form, username, password);
                     authenticatedCount++;
                 });
+            } else {
+                console.log('AUTO-AUTH: Widget', index, 'has no iframe or forms');
             }
         });
         
