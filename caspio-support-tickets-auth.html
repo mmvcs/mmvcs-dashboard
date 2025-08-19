@@ -80,7 +80,7 @@ function authenticateWidget(username, password) {
     updateIndicator('🔄 Authenticating...', 'blue');
     
     var attempts = 0;
-    var maxAttempts = 10;
+    var maxAttempts = 20; // Increased attempts for slower loading widgets
     
     var authInterval = setInterval(function() {
         attempts++;
@@ -88,6 +88,8 @@ function authenticateWidget(username, password) {
         // Look for login forms that may have appeared
         var forms = document.querySelectorAll('form');
         var authenticated = false;
+        
+        updateIndicator('🔄 Attempt ' + attempts + '/20...', 'blue');
         
         forms.forEach(function(form, index) {
             var usernameField = form.querySelector('input[type="text"], input[type="email"], input[name*="user"], input[name*="login"]');
@@ -113,6 +115,12 @@ function authenticateWidget(username, password) {
                     if (form.submit) {
                         form.submit();
                     }
+                    
+                    // After submitting, wait and try to reload if needed
+                    setTimeout(function() {
+                        checkIfNeedsReload();
+                    }, 2000);
+                    
                 }, 300);
                 
                 authenticated = true;
@@ -127,7 +135,25 @@ function authenticateWidget(username, password) {
                 updateIndicator('ℹ No login form found', '#999');
             }
         }
-    }, 1000);
+    }, 1500); // Slower checking interval
+}
+
+function checkIfNeedsReload() {
+    // Check if the widget shows any error or login required message
+    var bodyText = document.body.innerText.toLowerCase();
+    var needsReload = bodyText.includes('login') || 
+                      bodyText.includes('authentication') || 
+                      bodyText.includes('error') ||
+                      bodyText.includes('access denied');
+    
+    if (needsReload) {
+        updateIndicator('🔄 Auto-refreshing...', 'orange');
+        setTimeout(function() {
+            location.reload();
+        }, 1000);
+    } else {
+        updateIndicator('✅ Widget loaded', 'green');
+    }
 }
 
 // Listen for authentication messages
