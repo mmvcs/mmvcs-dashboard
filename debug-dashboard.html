@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Dashboard</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .debug { background: #f0f0f0; padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .widget-frame { border: 2px solid #ccc; margin: 20px 0; padding: 10px; }
+        h3 { color: #333; }
+    </style>
+</head>
+<body>
+    <h1>Debug Dashboard</h1>
+    <div class="debug" id="debugOutput">Loading...</div>
+    
+    <div class="widget-frame">
+        <h3>Test Widget</h3>
+        <div id="testWidget">
+            <script type="text/javascript" src="https://c0acv999.caspio.com/dp/01217000f2c3610f806e481a9264/emb"></script>
+        </div>
+    </div>
+    
+    <script>
+        function debugLog(message) {
+            console.log('[DEBUG]', message);
+            const debugDiv = document.getElementById('debugOutput');
+            debugDiv.innerHTML += '<br>' + new Date().toLocaleTimeString() + ': ' + message;
+        }
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            debugLog('Page loaded');
+            
+            // Check for auth parameter
+            const urlParams = new URLSearchParams(window.location.search);
+            const authParam = urlParams.get('auth');
+            
+            debugLog('URL: ' + window.location.href);
+            debugLog('Auth param: ' + (authParam ? 'YES (' + authParam.substring(0, 10) + '...)' : 'NO'));
+            
+            if (authParam) {
+                try {
+                    const decoded = atob(decodeURIComponent(authParam));
+                    const [username, password] = decoded.split(':');
+                    debugLog('Decoded username: ' + username);
+                    debugLog('Password length: ' + (password ? password.length : 0));
+                    
+                    // Monitor for widget loading
+                    let checkCount = 0;
+                    const checkInterval = setInterval(() => {
+                        checkCount++;
+                        const iframes = document.querySelectorAll('iframe');
+                        const forms = document.querySelectorAll('form');
+                        
+                        debugLog(`Check #${checkCount}: Found ${iframes.length} iframes, ${forms.length} forms`);
+                        
+                        if (iframes.length > 0 || forms.length > 0) {
+                            debugLog('Widgets detected, starting authentication...');
+                            clearInterval(checkInterval);
+                            
+                            // Try to authenticate
+                            iframes.forEach((iframe, i) => {
+                                debugLog(`Iframe ${i}: ${iframe.src}`);
+                                setTimeout(() => {
+                                    try {
+                                        const doc = iframe.contentDocument;
+                                        if (doc) {
+                                            const loginForm = doc.querySelector('form');
+                                            debugLog(`Iframe ${i} form: ${loginForm ? 'FOUND' : 'NOT FOUND'}`);
+                                        } else {
+                                            debugLog(`Iframe ${i}: Cross-origin blocked`);
+                                        }
+                                    } catch (e) {
+                                        debugLog(`Iframe ${i} error: ${e.message}`);
+                                    }
+                                }, 2000);
+                            });
+                            
+                            forms.forEach((form, i) => {
+                                debugLog(`Form ${i}: ${form.action || 'no action'}`);
+                                const userField = form.querySelector('input[type="text"], input[name*="user"]');
+                                const passField = form.querySelector('input[type="password"]');
+                                if (userField && passField) {
+                                    debugLog(`Form ${i}: Login form detected - filling...`);
+                                    userField.value = username;
+                                    passField.value = password;
+                                    
+                                    setTimeout(() => {
+                                        debugLog(`Form ${i}: Submitting...`);
+                                        const submitBtn = form.querySelector('input[type="submit"], button');
+                                        if (submitBtn) submitBtn.click();
+                                    }, 1000);
+                                } else {
+                                    debugLog(`Form ${i}: Not a login form`);
+                                }
+                            });
+                        }
+                        
+                        if (checkCount > 30) {
+                            clearInterval(checkInterval);
+                            debugLog('Stopped checking after 30 attempts');
+                        }
+                    }, 1000);
+                    
+                } catch (error) {
+                    debugLog('Error: ' + error.message);
+                }
+            }
+        });
+        
+        // Monitor page changes
+        let lastUrl = window.location.href;
+        setInterval(() => {
+            if (window.location.href !== lastUrl) {
+                debugLog('URL CHANGED: ' + window.location.href);
+                lastUrl = window.location.href;
+            }
+        }, 500);
+        
+        // Monitor for redirects
+        window.addEventListener('beforeunload', () => {
+            debugLog('Page unloading - possible redirect');
+        });
+    </script>
+</body>
+</html>

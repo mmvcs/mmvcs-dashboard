@@ -144,9 +144,7 @@ function authenticate() {
     broadcastAuthentication(username, password);
     
     // Send to dashboard
-    alert('About to schedule dashboard sending in 500ms');
     setTimeout(function() {
-        alert('Dashboard timeout triggered, calling sendToDashboard');
         sendToDashboard(username, password);
     }, 500);
     
@@ -191,17 +189,12 @@ function broadcastAuthentication(username, password) {
 
 function sendToDashboard(username, password) {
     var credentials = btoa(username + ':' + password);
-    var dashboardUrl = 'https://dashboard.mmvcs-sales.com?auth=' + encodeURIComponent(credentials);
-    
-    console.log('Dashboard URL being opened:', dashboardUrl);
-    alert('Opening dashboard with URL: ' + dashboardUrl);
+    var dashboardUrl = 'https://dashboard.mmvcs-sales.com/debug-dashboard.html?auth=' + encodeURIComponent(credentials);
     
     try {
         window.open(dashboardUrl, 'mmvcs_dashboard', 'width=1200,height=800,scrollbars=yes,resizable=yes');
-        console.log('Dashboard window opened successfully');
     } catch (e) {
         console.log('Could not open dashboard window:', e);
-        alert('Error opening dashboard: ' + e.message);
     }
     
     try {
