@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MMVCS Dashboard</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="dashboard-container">
+        <header class="dashboard-header">
+            <h1>MMVCS Dashboard</h1>
+        </header>
+        
+        <main class="dashboard-main">
+            <div class="widgets-grid">
+                <div class="widget-container full-width welcome-widget">
+                    <h3></h3>
+                    <div class="widget-frame" id="widget-0">
+                        <!-- Widget will be loaded here -->
+                    </div>
+                </div>
+
+                <div class="widget-container full-width">
+                    <h3>Sales Comparison This Year vs. Last Year</h3>
+                    <div class="widget-frame" id="widget-1">
+                        <!-- Widget will be loaded here -->
+                    </div>
+                </div>
+
+                <div class="widget-container full-width">
+                    <h3>Sales Chart by Month</h3>
+                    <div class="widget-frame" id="widget-2">
+                        <!-- Widget will be loaded here -->
+                    </div>
+                </div>
+
+                <div class="widget-container">
+                    <h3>Destination Mix - Current Year</h3>
+                    <div class="widget-frame" id="widget-3">
+                        <!-- Widget will be loaded here -->
+                    </div>
+                </div>
+
+                <div class="widget-container">
+                    <h3>Destination Mix - Last Year</h3>
+                    <div class="widget-frame" id="widget-4">
+                        <!-- Widget will be loaded here -->
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const widgetUrls = [
+            'https://c0acv999.caspio.com/dp/01217000f2c3610f806e481a9264/emb',
+            'https://c0acv999.caspio.com/dp/01217000201cfed888f24342b18f/emb', 
+            'https://c0acv999.caspio.com/dp/0121700013fadbf0a2db4aca8f73/emb',
+            'https://c0acv999.caspio.com/dp/01217000564ddc00d2ab4c7aac4d/emb',
+            'https://c0acv999.caspio.com/dp/01217000301880de360842d1adb1/emb'
+        ];
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            // Check for authentication credentials in URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const authParam = urlParams.get('auth');
+            
+            if (authParam) {
+                try {
+                    // Decode credentials from URL
+                    const decoded = atob(decodeURIComponent(authParam));
+                    const [username, password] = decoded.split(':');
+                    
+                    if (username && password) {
+                        console.log('Setting up Caspio session for:', username);
+                        
+                        // Clean URL first
+                        window.history.replaceState({}, document.title, window.location.pathname);
+                        
+                        // Set up Caspio session storage with ALL possible keys
+                        setupCaspioSession(username, password);
+                        
+                        // Show loading message
+                        showMessage('🔐 Establishing Caspio session...');
+                        
+                        // Wait for session to be established, then load widgets
+                        setTimeout(() => {
+                            showMessage('📊 Loading authenticated widgets...');
+                            loadAllWidgets();
+                        }, 2000);
+                        
+                        setTimeout(() => {
+                            hideMessage();
+                        }, 5000);
+                    }
+                } catch (error) {
+                    console.error('Error processing authentication:', error);
+                    loadAllWidgets();
+                }
+            } else {
+                // No authentication - load widgets normally
+                loadAllWidgets();
+            }
+        });
+
+        function setupCaspioSession(username, password) {
+            // Store in all possible storage locations and formats that Caspio might use
+            const storageData = {
+                'mmvcs_user': username,
+                'mmvcs_pass': password,
+                'mmvcs_password': password,
+                'caspio_user': username,
+                'caspio_pass': password,
+                'caspio_password': password,
+                'user': username,
+                'pass': password,
+                'password': password,
+                'username': username,
+                'login': username,
+                'auth_user': username,
+                'auth_pass': password,
+                'authenticated': 'true',
+                'caspio_authenticated': 'true',
+                'mmvcs_authenticated': 'true',
+                'session_user': username,
+                'session_pass': password
+            };
+            
+            // Store in localStorage
+            Object.keys(storageData).forEach(key => {
+                localStorage.setItem(key, storageData[key]);
+            });
+            
+            // Store in sessionStorage  
+            Object.keys(storageData).forEach(key => {
+                sessionStorage.setItem(key, storageData[key]);
+            });
+            
+            // Also store encoded versions
+            const encoded = btoa(username + ':' + password);
+            localStorage.setItem('caspio_credentials', encoded);
+            sessionStorage.setItem('caspio_credentials', encoded);
+            localStorage.setItem('auth_token', encoded);
+            sessionStorage.setItem('auth_token', encoded);
+            
+            // Set cookies as well
+            document.cookie = `mmvcs_user=${username}; path=/`;
+            document.cookie = `mmvcs_pass=${password}; path=/`;
+            document.cookie = `caspio_user=${username}; path=/`;
+            document.cookie = `caspio_pass=${password}; path=/`;
+            document.cookie = `authenticated=true; path=/`;
+            
+            console.log('Caspio session storage set up with comprehensive credentials');
+        }
+
+        function showMessage(text) {
+            let statusDiv = document.getElementById('status-message');
+            if (!statusDiv) {
+                statusDiv = document.createElement('div');
+                statusDiv.id = 'status-message';
+                statusDiv.style.cssText = `
+                    position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+                    background: #2c3e50; color: white; padding: 30px; border-radius: 10px; 
+                    z-index: 10000; font-size: 18px; text-align: center;
+                    box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+                `;
+                document.body.appendChild(statusDiv);
+            }
+            statusDiv.innerHTML = text;
+        }
+
+        function hideMessage() {
+            const statusDiv = document.getElementById('status-message');
+            if (statusDiv) {
+                statusDiv.remove();
+            }
+        }
+
+        function loadAllWidgets() {
+            console.log('Loading all widgets');
+            
+            widgetUrls.forEach((url, index) => {
+                setTimeout(() => {
+                    loadWidget(index, url);
+                }, index * 500);
+            });
+            
+            // Show success message after loading
+            setTimeout(() => {
+                showSuccessMessage();
+            }, widgetUrls.length * 500 + 2000);
+        }
+
+        function loadWidget(index, url) {
+            console.log(`Loading widget ${index}: ${url}`);
+            const container = document.getElementById(`widget-${index}`);
+            
+            const script = document.createElement('script');
+            script.type = 'text/javascript';
+            script.src = url;
+            
+            script.onload = () => {
+                console.log(`Widget ${index} script loaded`);
+            };
+            
+            script.onerror = () => {
+                console.log(`Failed to load widget ${index} script`);
+                container.innerHTML = '<p style="color: red;">Failed to load widget</p>';
+            };
+            
+            container.appendChild(script);
+        }
+
+        function showSuccessMessage() {
+            const statusDiv = document.createElement('div');
+            statusDiv.style.cssText = `
+                position: fixed; top: 20px; right: 20px; background: #27ae60; color: white; 
+                padding: 15px; border-radius: 5px; z-index: 10000; max-width: 300px;
+                box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            `;
+            statusDiv.innerHTML = `
+                ✅ <strong>Dashboard Loaded</strong><br>
+                Session established for authenticated access
+                <button onclick="this.parentElement.remove()" style="float: right; background: none; border: none; color: white; cursor: pointer; font-size: 16px;">×</button>
+            `;
+            document.body.appendChild(statusDiv);
+            
+            setTimeout(() => {
+                if (document.body.contains(statusDiv)) {
+                    document.body.removeChild(statusDiv);
+                }
+            }, 8000);
+        }
+        
+        // Debug: Show what's in storage
+        setTimeout(() => {
+            console.log('Current localStorage:', localStorage);
+            console.log('Current sessionStorage:', sessionStorage);
+            console.log('Current cookies:', document.cookie);
+        }, 3000);
+    </script>
+</body>
+</html>
