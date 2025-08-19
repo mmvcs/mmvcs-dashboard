@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MMVCS Dashboard Login</title>
+    <style>
+        .mmvcs-login-widget {
+            max-width: 400px;
+            margin: 20px auto;
+            padding: 30px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .mmvcs-login-widget h3 {
+            text-align: center;
+            margin-bottom: 25px;
+            color: #333;
+            font-size: 24px;
+        }
+        
+        .mmvcs-form-group {
+            margin-bottom: 20px;
+        }
+        
+        .mmvcs-form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+            font-weight: 500;
+        }
+        
+        .mmvcs-form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            box-sizing: border-box;
+            transition: border-color 0.3s;
+        }
+        
+        .mmvcs-form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .mmvcs-login-btn {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        .mmvcs-login-btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        .mmvcs-login-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .mmvcs-error {
+            color: #e74c3c;
+            text-align: center;
+            margin-top: 15px;
+            padding: 10px;
+            background: #fdf2f2;
+            border-radius: 5px;
+            border: 1px solid #fecaca;
+            display: none;
+        }
+        
+        .mmvcs-success {
+            color: #27ae60;
+            text-align: center;
+            margin-top: 15px;
+            padding: 10px;
+            background: #f0f9f4;
+            border-radius: 5px;
+            border: 1px solid #4ade80;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="mmvcs-login-widget">
+        <h3>Access MMVCS Dashboard</h3>
+        <form id="mmvcs-login-form">
+            <div class="mmvcs-form-group">
+                <label for="mmvcs-username">Username:</label>
+                <input type="text" id="mmvcs-username" name="username" required>
+            </div>
+            <div class="mmvcs-form-group">
+                <label for="mmvcs-password">Password:</label>
+                <input type="password" id="mmvcs-password" name="password" required>
+            </div>
+            <button type="submit" class="mmvcs-login-btn">Access Dashboard</button>
+        </form>
+        <div id="mmvcs-error" class="mmvcs-error"></div>
+        <div id="mmvcs-success" class="mmvcs-success"></div>
+    </div>
+
+    <script>
+        document.getElementById('mmvcs-login-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const username = document.getElementById('mmvcs-username').value.trim();
+            const password = document.getElementById('mmvcs-password').value.trim();
+            const errorDiv = document.getElementById('mmvcs-error');
+            const successDiv = document.getElementById('mmvcs-success');
+            const submitBtn = e.target.querySelector('.mmvcs-login-btn');
+            
+            // Hide any previous messages
+            errorDiv.style.display = 'none';
+            successDiv.style.display = 'none';
+            
+            if (!username || !password) {
+                errorDiv.textContent = 'Please enter both username and password';
+                errorDiv.style.display = 'block';
+                return;
+            }
+            
+            // Show loading state
+            const originalText = submitBtn.textContent;
+            submitBtn.textContent = 'Authenticating...';
+            submitBtn.disabled = true;
+            
+            try {
+                // Check if we're in an iframe (Zoho widget)
+                if (window.parent && window.parent !== window) {
+                    // We're in an iframe - send auth to parent and authenticate widgets
+                    
+                    // Send credentials to parent window (Zoho Connect)
+                    window.parent.postMessage({
+                        type: 'mmvcs_auth_success',
+                        username: username,
+                        password: password,
+                        source: 'mmvcs_login_widget'
+                    }, '*');
+                    
+                    // Show success message instead of redirecting
+                    submitBtn.textContent = '✅ Authenticated';
+                    submitBtn.style.background = '#27ae60';
+                    successDiv.textContent = 'Authentication sent to all widgets!';
+                    successDiv.style.display = 'block';
+                    
+                    // Try to authenticate widgets directly
+                    setTimeout(() => {
+                        authenticateZohoWidgets(username, password);
+                    }, 1000);
+                    
+                    console.log('Sent authentication to Zoho Connect parent');
+                    
+                } else {
+                    // We're in a normal browser - redirect to dashboard
+                    const credentials = btoa(username + ':' + password);
+                    window.location.href = `https://dashboard.mmvcs-sales.com?auth=${encodeURIComponent(credentials)}`;
+                }
+                
+            } catch (error) {
+                // Reset button state
+                submitBtn.textContent = originalText;
+                submitBtn.disabled = false;
+                
+                errorDiv.textContent = 'Connection error. Please try again.';
+                errorDiv.style.display = 'block';
+            }
+        });
+        
+        function authenticateZohoWidgets(username, password) {
+            try {
+                // Try to access parent document to find other widgets
+                const parentDoc = window.parent.document;
+                const iframes = parentDoc.querySelectorAll('iframe');
+                
+                console.log(`Found ${iframes.length} iframes in parent document`);
+                
+                iframes.forEach((iframe, index) => {
+                    // Skip our own iframe
+                    if (iframe.contentWindow === window) {
+                        return;
+                    }
+                    
+                    // Try to authenticate each iframe
+                    setTimeout(() => {
+                        try {
+                            iframe.contentWindow.postMessage({
+                                type: 'caspio_auto_auth',
+                                username: username,
+                                password: password
+                            }, '*');
+                            console.log('Sent auth to iframe:', iframe.src || 'embedded content');
+                        } catch (e) {
+                            console.log('Cross-origin auth attempt for iframe:', e.message);
+                        }
+                    }, index * 500);
+                });
+                
+            } catch (crossOriginError) {
+                console.log('Cannot access parent document directly:', crossOriginError.message);
+            }
+        }
+        
+        console.log('Smart MMVCS login widget loaded');
+    </script>
+</body>
+</html>
