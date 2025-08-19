@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Authentication Bridge</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 5px;
+            font-family: Arial, sans-serif;
+            font-size: 11px;
+            color: #666;
+            text-align: center;
+            background: transparent;
+        }
+    </style>
+</head>
+<body>
+    <div>🔐 Authentication Bridge Active</div>
+    
+    <script>
+    // Authentication listener for Zoho Connect
+    window.addEventListener('message', function(event) {
+        if (event.data && event.data.type === 'mmvcs_auth_success' && event.data.source === 'mmvcs_dashboard') {
+            const username = event.data.username;
+            const password = event.data.password;
+            
+            console.log('Received authentication from dashboard widget');
+            
+            // Send message to parent window (Zoho Connect) to authenticate other widgets
+            if (window.parent && window.parent !== window) {
+                window.parent.postMessage({
+                    type: 'zoho_auth_all_widgets',
+                    username: username,
+                    password: password
+                }, '*');
+            }
+            
+            // Also try to authenticate widgets directly
+            authenticateAllWidgets(username, password);
+        }
+    });
+
+    function authenticateAllWidgets(username, password) {
+        try {
+            // Try to access parent document to find other Caspio widgets
+            const parentDoc = window.parent.document;
+            const iframes = parentDoc.querySelectorAll('iframe');
+            
+            iframes.forEach((iframe, index) => {
+                // Skip our own iframe and the dashboard iframe
+                if (iframe.src && 
+                    !iframe.src.includes('dashboard.mmvcs-sales.com') && 
+                    !iframe.src.includes('zoho-connect-auth.html')) {
+                    
+                    setTimeout(() => {
+                        try {
+                            iframe.contentWindow.postMessage({
+                                type: 'caspio_auto_auth',
+                                username: username,
+                                password: password
+                            }, '*');
+                            console.log('Sent auth to widget:', iframe.src);
+                        } catch (e) {
+                            console.log('Cross-origin auth attempt for:', iframe.src);
+                        }
+                    }, index * 1000);
+                }
+            });
+        } catch (crossOriginError) {
+            console.log('Cannot access parent document directly, using postMessage only');
+        }
+    }
+
+    // Also listen for direct authentication requests
+    window.addEventListener('message', function(event) {
+        if (event.data && event.data.type === 'zoho_auth_all_widgets') {
+            authenticateAllWidgets(event.data.username, event.data.password);
+        }
+    });
+
+    console.log('Zoho Connect authentication bridge loaded');
+    </script>
+</body>
+</html>
