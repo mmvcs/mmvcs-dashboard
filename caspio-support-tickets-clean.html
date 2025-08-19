@@ -162,6 +162,40 @@ window.addEventListener('message', function(event) {
     }
 });
 
+// Also set up parent window message relay
+if (window.parent && window.parent !== window) {
+    try {
+        window.parent.addEventListener('message', function(event) {
+            if (event.data && event.data.type === 'mmvcs_auth') {
+                // Re-broadcast to this window
+                window.postMessage(event.data, '*');
+                console.log('Support Tickets received auth via parent relay');
+            }
+        });
+    } catch(e) {
+        console.log('Could not set up parent message relay:', e.message);
+    }
+}
+
+// Poll for credentials in storage (fallback method)
+var pollCount = 0;
+var pollInterval = setInterval(function() {
+    pollCount++;
+    
+    var username = localStorage.getItem('mmvcs_user');
+    var password = localStorage.getItem('mmvcs_pass');
+    
+    if (username && password && !widgetLoaded) {
+        console.log('Support Tickets found credentials via polling:', username);
+        clearInterval(pollInterval);
+        loadCaspioWidget();
+    }
+    
+    if (pollCount > 20) { // Stop polling after 20 attempts (1 minute)
+        clearInterval(pollInterval);
+    }
+}, 3000);
+
 // Wait for authentication message - don't auto-load
 console.log('Support Tickets widget ready - waiting for authentication');
 </script>

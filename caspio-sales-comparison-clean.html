@@ -103,17 +103,51 @@ function authenticateWidget(username, password) {
 // Listen for authentication messages
 window.addEventListener('message', function(event) {
     if (event.data && event.data.type === 'mmvcs_auth' && event.data.username) {
+        console.log('Sales Comparison received authentication for:', event.data.username);
         setTimeout(function() {
             authenticateWidget(event.data.username, event.data.password);
         }, 1000);
     }
 });
 
-// Start checking for credentials
-setTimeout(function() {
-    if (!checkForCredentials()) {
-        setInterval(checkForCredentials, 3000);
+// Also set up parent window message relay
+if (window.parent && window.parent !== window) {
+    try {
+        window.parent.addEventListener('message', function(event) {
+            if (event.data && event.data.type === 'mmvcs_auth') {
+                // Re-broadcast to this window
+                window.postMessage(event.data, '*');
+                console.log('Sales Comparison received auth via parent relay');
+            }
+        });
+    } catch(e) {
+        console.log('Could not set up parent message relay:', e.message);
     }
+}
+
+// Start checking for credentials - but only check for fresh auth
+setTimeout(function() {
+    // Don't auto-load with stored credentials - wait for fresh auth message
+    console.log('Sales Comparison ready - waiting for authentication');
+    
+    // Poll for fresh credentials (fallback method)
+    var pollCount = 0;
+    var pollInterval = setInterval(function() {
+        pollCount++;
+        
+        var username = localStorage.getItem('mmvcs_user');
+        var password = localStorage.getItem('mmvcs_pass');
+        
+        if (username && password) {
+            console.log('Sales Comparison found credentials via polling:', username);
+            clearInterval(pollInterval);
+            authenticateWidget(username, password);
+        }
+        
+        if (pollCount > 20) { // Stop polling after 20 attempts (1 minute)
+            clearInterval(pollInterval);
+        }
+    }, 3000);
 }, 1000);
 </script>
 </body>
