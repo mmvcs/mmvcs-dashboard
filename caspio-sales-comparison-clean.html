@@ -130,22 +130,42 @@ setTimeout(function() {
     // Don't auto-load with stored credentials - wait for fresh auth message
     console.log('Sales Comparison ready - waiting for authentication');
     
-    // Poll for fresh credentials (fallback method)
-    var pollCount = 0;
-    var pollInterval = setInterval(function() {
-        pollCount++;
+    // Poll for authentication data in parent window global variable
+    var globalPollCount = 0;
+    var sessionId = Date.now();
+    
+    var globalPollInterval = setInterval(function() {
+        globalPollCount++;
         
-        var username = localStorage.getItem('mmvcs_user');
-        var password = localStorage.getItem('mmvcs_pass');
+        try {
+            // Check for auth data in parent window
+            if (window.parent && window.parent.mmvcs_current_auth) {
+                var authData = window.parent.mmvcs_current_auth;
+                if (authData.username && authData.timestamp > (sessionId - 60000)) { // Within last minute
+                    console.log('Sales Comparison found auth in parent global');
+                    clearInterval(globalPollInterval);
+                    authenticateWidget(authData.username, authData.password);
+                    return;
+                }
+            }
+        } catch(e) {}
         
-        if (username && password) {
-            console.log('Sales Comparison found credentials via polling:', username);
-            clearInterval(pollInterval);
-            authenticateWidget(username, password);
-        }
+        try {
+            // Check for auth data in top window
+            if (window.top && window.top.mmvcs_current_auth) {
+                var authData = window.top.mmvcs_current_auth;
+                if (authData.username && authData.timestamp > (sessionId - 60000)) { // Within last minute
+                    console.log('Sales Comparison found auth in top global');
+                    clearInterval(globalPollInterval);
+                    authenticateWidget(authData.username, authData.password);
+                    return;
+                }
+            }
+        } catch(e) {}
         
-        if (pollCount > 20) { // Stop polling after 20 attempts (1 minute)
-            clearInterval(pollInterval);
+        if (globalPollCount > 30) { // Stop polling after 30 attempts (1.5 minutes)
+            clearInterval(globalPollInterval);
+            console.log('Sales Comparison stopped polling for auth after 30 attempts');
         }
     }, 3000);
 }, 1000);

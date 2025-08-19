@@ -166,6 +166,43 @@ if (window.parent && window.parent !== window) {
     }
 }
 
+// Poll for authentication data in parent window global variable
+var globalPollCount = 0;
+var globalPollInterval = setInterval(function() {
+    globalPollCount++;
+    
+    try {
+        // Check for auth data in parent window
+        if (window.parent && window.parent.mmvcs_current_auth) {
+            var authData = window.parent.mmvcs_current_auth;
+            if (authData.username && authData.timestamp > sessionId) {
+                console.log('Support Tickets found auth in parent global for session:', sessionId);
+                clearInterval(globalPollInterval);
+                loadCaspioWidget(authData.username, authData.password);
+                return;
+            }
+        }
+    } catch(e) {}
+    
+    try {
+        // Check for auth data in top window
+        if (window.top && window.top.mmvcs_current_auth) {
+            var authData = window.top.mmvcs_current_auth;
+            if (authData.username && authData.timestamp > sessionId) {
+                console.log('Support Tickets found auth in top global for session:', sessionId);
+                clearInterval(globalPollInterval);
+                loadCaspioWidget(authData.username, authData.password);
+                return;
+            }
+        }
+    } catch(e) {}
+    
+    if (globalPollCount > 30) { // Stop polling after 30 attempts (1.5 minutes)
+        clearInterval(globalPollInterval);
+        console.log('Support Tickets stopped polling for auth after 30 attempts');
+    }
+}, 3000);
+
 // Clear any existing stored credentials on load
 try {
     localStorage.removeItem('mmvcs_user');

@@ -201,6 +201,21 @@ function broadcastAuthentication(username, password) {
         addDebug('Parent/top send failed: ' + e.message);
     }
     
+    // Try setting global variables on parent window
+    try {
+        window.parent.mmvcs_current_auth = broadcastData;
+        addDebug('✓ Set global auth on parent window');
+    } catch (e) {
+        addDebug('✗ Could not set parent global: ' + e.message);
+    }
+    
+    try {
+        window.top.mmvcs_current_auth = broadcastData;
+        addDebug('✓ Set global auth on top window');
+    } catch (e) {
+        addDebug('✗ Could not set top global: ' + e.message);
+    }
+    
     // Try to find and send to other iframes directly
     try {
         var parentDoc = window.parent.document;
