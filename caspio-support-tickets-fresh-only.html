@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Support Tickets</title>
+<style>
+body { 
+    margin: 0; 
+    padding: 0; 
+    font-family: Arial, sans-serif; 
+}
+#caspio-container { 
+    width: 100%; 
+    height: 100vh; 
+}
+.waiting-message {
+    text-align: center; 
+    padding: 50px; 
+    color: #666; 
+    font-size: 14px;
+}
+</style>
+</head>
+<body>
+<div id="caspio-container">
+    <div class="waiting-message">
+        Please authenticate using the login widget to access Support Tickets
+    </div>
+</div>
+
+<script>
+var caspioContainer = document.getElementById('caspio-container');
+var widgetLoaded = false;
+var sessionId = Date.now(); // Unique session identifier
+
+function loadCaspioWidget(username, password) {
+    if (widgetLoaded) return;
+    widgetLoaded = true;
+    
+    console.log('Support Tickets loading widget for session:', sessionId);
+    
+    // Clear the waiting message
+    caspioContainer.innerHTML = '';
+    
+    var script = document.createElement('script');
+    script.type = 'text/javascript';
+    script.src = 'https://c0acv999.caspio.com/dp/01217000b3314ae88b7949d3bc8d/emb';
+    script.onload = function() {
+        setTimeout(function() {
+            monitorForLoginForms(username, password);
+        }, 2000);
+    };
+    
+    caspioContainer.appendChild(script);
+}
+
+function monitorForLoginForms(username, password) {
+    var attempts = 0;
+    var maxAttempts = 15;
+    
+    var monitorInterval = setInterval(function() {
+        attempts++;
+        
+        var bodyText = document.body.innerText.toLowerCase();
+        var needsAuth = bodyText.includes('sign in') || 
+                       bodyText.includes('log in') || 
+                       bodyText.includes('login required') ||
+                       bodyText.includes('please login') ||
+                       bodyText.includes('authentication required') ||
+                       bodyText.includes('access denied');
+        
+        var forms = document.querySelectorAll('form');
+        var loginFormFound = false;
+        
+        forms.forEach(function(form) {
+            var hasUsernameField = form.querySelector('input[type="text"], input[name*="user"], input[name*="login"], input[name*="email"]');
+            var hasPasswordField = form.querySelector('input[type="password"], input[name*="pass"]');
+            
+            if (hasUsernameField && hasPasswordField) {
+                loginFormFound = true;
+                fillLoginForm(form, username, password);
+            }
+        });
+        
+        if (needsAuth && !loginFormFound && attempts > 5) {
+            setTimeout(function() {
+                location.reload();
+            }, 1000);
+            clearInterval(monitorInterval);
+            return;
+        }
+        
+        if (!needsAuth && !loginFormFound && attempts > 8) {
+            var hasContent = bodyText.includes('support') || bodyText.includes('request') || bodyText.includes('form');
+            if (hasContent) {
+                clearInterval(monitorInterval);
+            }
+        }
+        
+        if (attempts >= maxAttempts) {
+            clearInterval(monitorInterval);
+        }
+        
+    }, 2000);
+}
+
+function fillLoginForm(form, username, password) {
+    var usernameField = form.querySelector('input[type="text"], input[name*="user"], input[name*="login"], input[name*="email"]');
+    var passwordField = form.querySelector('input[type="password"], input[name*="pass"]');
+    var submitButton = form.querySelector('input[type="submit"], button[type="submit"], button');
+    
+    if (usernameField && passwordField) {
+        usernameField.value = '';
+        passwordField.value = '';
+        
+        setTimeout(function() {
+            usernameField.value = username;
+            passwordField.value = password;
+            
+            ['input', 'change', 'keyup', 'blur', 'focus'].forEach(function(eventType) {
+                usernameField.dispatchEvent(new Event(eventType, {bubbles: true}));
+                passwordField.dispatchEvent(new Event(eventType, {bubbles: true}));
+            });
+            
+            setTimeout(function() {
+                if (submitButton) {
+                    submitButton.click();
+                }
+                
+                setTimeout(function() {
+                    if (form.submit) {
+                        form.submit();
+                    }
+                }, 500);
+                
+            }, 300);
+            
+        }, 200);
+    }
+}
+
+// ONLY listen for fresh authentication messages - ignore ALL stored data
+window.addEventListener('message', function(event) {
+    if (event.data && event.data.type === 'mmvcs_auth' && event.data.username) {
+        console.log('Support Tickets received FRESH authentication for:', event.data.username, 'in session:', sessionId);
+        
+        // Do NOT store credentials - use them directly
+        setTimeout(function() {
+            loadCaspioWidget(event.data.username, event.data.password);
+        }, 1000);
+    }
+});
+
+// Also listen to parent window messages
+if (window.parent && window.parent !== window) {
+    try {
+        window.parent.addEventListener('message', function(event) {
+            if (event.data && event.data.type === 'mmvcs_auth') {
+                console.log('Support Tickets received auth via parent relay for session:', sessionId);
+                // Re-broadcast to this window
+                window.postMessage(event.data, '*');
+            }
+        });
+    } catch(e) {
+        console.log('Could not set up parent message relay:', e.message);
+    }
+}
+
+// Clear any existing stored credentials on load
+try {
+    localStorage.removeItem('mmvcs_user');
+    localStorage.removeItem('mmvcs_pass');
+    sessionStorage.removeItem('mmvcs_user');
+    sessionStorage.removeItem('mmvcs_pass');
+    console.log('Support Tickets cleared all stored credentials for fresh session:', sessionId);
+} catch(e) {}
+
+console.log('Support Tickets widget ready - session:', sessionId, '- waiting for FRESH authentication only');
+</script>
+</body>
+</html>
