@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Caspio Auth Receiver</title>
+</head>
+<body style="margin:0;padding:8px;font-family:Arial,sans-serif;font-size:11px;background:#e8f4f8;">
+<div style="text-align:center;color:#666;">🎯 Caspio Authentication Receiver</div>
+<div id="status" style="margin-top:8px;padding:6px;border-radius:3px;background:white;border:1px solid #ccc;font-size:10px;"></div>
+<script>
+var statusDiv = document.getElementById('status');
+var receivedAuth = false;
+
+function updateStatus(message, color) {
+    statusDiv.innerHTML = message;
+    statusDiv.style.color = color || '#333';
+    console.log('Caspio Receiver:', message);
+}
+
+function findAndAuthenticateCaspioWidgets(username, password) {
+    updateStatus('🔍 Scanning for Caspio widgets...', 'blue');
+    
+    // Look for Caspio-specific elements on the page
+    try {
+        // Try to access parent document
+        var parentDoc = window.parent.document;
+        
+        // Look for Caspio scripts and iframes
+        var caspioElements = [];
+        
+        // Find Caspio script tags
+        var scripts = parentDoc.querySelectorAll('script[src*="caspio.com"]');
+        caspioElements = caspioElements.concat(Array.prototype.slice.call(scripts));
+        
+        // Find iframes with Caspio URLs
+        var caspioIframes = parentDoc.querySelectorAll('iframe[src*="caspio.com"]');
+        caspioElements = caspioElements.concat(Array.prototype.slice.call(caspioIframes));
+        
+        // Find any divs with Caspio IDs
+        var caspioDivs = parentDoc.querySelectorAll('div[id*="caspio"], div[class*="caspio"]');
+        caspioElements = caspioElements.concat(Array.prototype.slice.call(caspioDivs));
+        
+        updateStatus('📊 Found ' + caspioElements.length + ' potential Caspio elements', 'green');
+        
+        if (caspioElements.length > 0) {
+            // Try to authenticate each Caspio element
+            caspioElements.forEach(function(element, index) {
+                setTimeout(function() {
+                    authenticateCaspioElement(element, username, password, index);
+                }, index * 500);
+            });
+        } else {
+            // No specific Caspio elements found, try all forms
+            var forms = parentDoc.querySelectorAll('form');
+            updateStatus('📝 No Caspio elements found, trying ' + forms.length + ' forms', 'orange');
+            
+            forms.forEach(function(form, index) {
+                setTimeout(function() {
+                    tryAuthenticateForm(form, username, password, index);
+                }, index * 300);
+            });
+        }
+        
+    } catch (e) {
+        updateStatus('❌ Cannot access parent page: ' + e.message, 'red');
+        
+        // Fallback: broadcast to all possible targets
+        broadcastToAllTargets(username, password);
+    }
+}
+
+function authenticateCaspioElement(element, username, password, index) {
+    console.log('Attempting to authenticate Caspio element', index, element);
+    
+    // If it's an iframe, try to send messages to it
+    if (element.tagName === 'IFRAME') {
+        try {
+            var authMessages = [
+                {type: 'caspio_auth', username: username, password: password},
+                {type: 'auto_login', user: username, pass: password},
+                {type: 'login_credentials', username: username, password: password}
+            ];
+            
+            authMessages.forEach(function(msg) {
+                element.contentWindow.postMessage(msg, '*');
+            });
+            
+            console.log('Sent auth messages to Caspio iframe', index);
+        } catch (e) {
+            console.log('Could not send to Caspio iframe:', e.message);
+        }
+    }
+    
+    // If it's a div, look for forms within it
+    if (element.tagName === 'DIV') {
+        var forms = element.querySelectorAll('form');
+        forms.forEach(function(form) {
+            tryAuthenticateForm(form, username, password, 'div-' + index);
+        });
+    }
+}
+
+function tryAuthenticateForm(form, username, password, formId) {
+    try {
+        // Look for username/password fields
+        var usernameFields = form.querySelectorAll('input[type="text"], input[type="email"], input[name*="user"], input[name*="login"], input[name*="email"]');
+        var passwordFields = form.querySelectorAll('input[type="password"], input[name*="pass"]');
+        var submitButtons = form.querySelectorAll('input[type="submit"], button[type="submit"], button');
+        
+        if (usernameFields.length > 0 && passwordFields.length > 0) {
+            var usernameField = usernameFields[0];
+            var passwordField = passwordFields[0];
+            var submitButton = submitButtons[0];
+            
+            // Fill the fields
+            usernameField.value = username;
+            passwordField.value = password;
+            
+            // Trigger events
+            ['input', 'change', 'keyup', 'blur'].forEach(function(eventType) {
+                usernameField.dispatchEvent(new Event(eventType, {bubbles: true}));
+                passwordField.dispatchEvent(new Event(eventType, {bubbles: true}));
+            });
+            
+            // Try to submit
+            if (submitButton) {
+                setTimeout(function() {
+                    submitButton.click();
+                }, 200);
+            }
+            
+            // Also try form.submit()
+            setTimeout(function() {
+                if (form.submit) {
+                    form.submit();
+                }
+            }, 400);
+            
+            console.log('Authenticated form', formId);
+            return true;
+        }
+    } catch (e) {
+        console.log('Error authenticating form', formId, ':', e.message);
+    }
+    return false;
+}
+
+function broadcastToAllTargets(username, password) {
+    updateStatus('📡 Broadcasting to all possible targets...', 'blue');
+    
+    // Try various postMessage targets
+    var targets = [window.parent, window.top];
+    var messageTypes = [
+        'caspio_auth',
+        'auto_login', 
+        'login_credentials',
+        'widget_auth',
+        'global_auth'
+    ];
+    
+    targets.forEach(function(target) {
+        if (target && target !== window) {
+            messageTypes.forEach(function(type) {
+                try {
+                    target.postMessage({
+                        type: type,
+                        username: username,
+                        password: password,
+                        source: 'caspio_receiver'
+                    }, '*');
+                } catch (e) {}
+            });
+        }
+    });
+}
+
+// Listen for authentication data
+function checkForAuth() {
+    var found = false;
+    var username = '';
+    var password = '';
+    var source = '';
+    
+    // Check multiple storage locations
+    var checkLocations = [
+        function() {
+            var user = localStorage.getItem('mmvcs_user');
+            var pass = localStorage.getItem('mmvcs_pass');
+            return user && pass ? {username: user, password: pass, source: 'localStorage'} : null;
+        },
+        function() {
+            var user = sessionStorage.getItem('mmvcs_user');
+            var pass = sessionStorage.getItem('mmvcs_pass');
+            return user && pass ? {username: user, password: pass, source: 'sessionStorage'} : null;
+        },
+        function() {
+            try {
+                if (window.parent && window.parent.mmvcs_auth_broadcast) {
+                    var creds = window.parent.mmvcs_auth_broadcast;
+                    return {username: creds.username, password: creds.password, source: 'parent.mmvcs_auth_broadcast'};
+                }
+            } catch (e) {}
+            return null;
+        },
+        function() {
+            try {
+                if (window.parent && window.parent.mmvcs_current_auth) {
+                    var creds = window.parent.mmvcs_current_auth;
+                    return {username: creds.username, password: creds.password, source: 'parent.mmvcs_current_auth'};
+                }
+            } catch (e) {}
+            return null;
+        }
+    ];
+    
+    for (var i = 0; i < checkLocations.length; i++) {
+        var result = checkLocations[i]();
+        if (result) {
+            username = result.username;
+            password = result.password;
+            source = result.source;
+            found = true;
+            break;
+        }
+    }
+    
+    if (found && !receivedAuth) {
+        receivedAuth = true;
+        updateStatus('✅ Received auth for: ' + username + '<br><small>' + source + '</small>', 'green');
+        
+        setTimeout(function() {
+            findAndAuthenticateCaspioWidgets(username, password);
+        }, 1000);
+        
+        return true;
+    } else if (!found) {
+        updateStatus('⏳ Waiting for authentication...', '#666');
+    }
+    
+    return found;
+}
+
+// Check for auth every 2 seconds
+updateStatus('🔍 Scanning for authentication data...', '#666');
+setInterval(checkForAuth, 2000);
+
+// Also listen for postMessage events
+window.addEventListener('message', function(event) {
+    if (event.data && event.data.username && event.data.password) {
+        console.log('Received postMessage auth:', event.data);
+        if (!receivedAuth) {
+            receivedAuth = true;
+            updateStatus('✅ Received auth via postMessage: ' + event.data.username, 'green');
+            setTimeout(function() {
+                findAndAuthenticateCaspioWidgets(event.data.username, event.data.password);
+            }, 1000);
+        }
+    }
+});
+
+console.log('Caspio authentication receiver loaded');
+</script>
+</body>
+</html>

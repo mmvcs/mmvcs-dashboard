@@ -92,53 +92,106 @@ function checkCredentials() {
 function authenticateWidgets(username, password) {
     updateStatus('🔄 Broadcasting authentication...', 'blue');
     
-    var attempts = 0;
-    
-    // Try to find and authenticate other iframes
+    // Store credentials in multiple global locations for other widgets to find
     try {
-        var parentDoc = window.parent.document;
-        var iframes = parentDoc.querySelectorAll('iframe');
-        
-        updateStatus('📡 Found ' + iframes.length + ' widgets, authenticating...', 'blue');
-        
-        for (var i = 0; i < iframes.length; i++) {
-            (function(iframe, index) {
-                // Skip our own iframe
-                if (iframe.contentWindow === window) return;
-                
-                setTimeout(function() {
-                    try {
-                        // Try multiple message types that Caspio might recognize
-                        var authMessages = [
-                            {type: 'caspio_auth', username: username, password: password},
-                            {type: 'auto_login', user: username, pass: password},
-                            {type: 'credentials', username: username, password: password},
-                            {type: 'login_data', username: username, password: password}
-                        ];
-                        
-                        authMessages.forEach(function(msg) {
-                            iframe.contentWindow.postMessage(msg, '*');
-                        });
-                        
-                        attempts++;
-                        console.log('Sent auth to iframe', index);
-                        
-                    } catch (e) {
-                        console.log('Could not authenticate iframe', index, ':', e.message);
-                    }
-                }, index * 200);
-                
-            })(iframes[i], i);
+        // Try to store in parent window
+        if (window.parent && window.parent !== window) {
+            window.parent.mmvcs_auth_broadcast = {
+                username: username,
+                password: password,
+                timestamp: Date.now(),
+                source: 'handler'
+            };
         }
+    } catch (e) {}
+    
+    try {
+        // Try to store in top window
+        if (window.top && window.top !== window) {
+            window.top.mmvcs_auth_broadcast = {
+                username: username,
+                password: password,
+                timestamp: Date.now(),
+                source: 'handler'
+            };
+        }
+    } catch (e) {}
+    
+    // Since we can't directly access other iframes, try broadcasting via wildcard postMessage
+    try {
+        // Send to parent window with wildcard
+        window.parent.postMessage({
+            type: 'mmvcs_global_auth',
+            username: username,
+            password: password,
+            broadcast: true
+        }, '*');
         
-        setTimeout(function() {
-            updateStatus('✅ Authentication sent to ' + attempts + ' widgets', 'green');
-        }, iframes.length * 200 + 500);
+        // Send to top window with wildcard  
+        window.top.postMessage({
+            type: 'mmvcs_global_auth',
+            username: username,
+            password: password,
+            broadcast: true
+        }, '*');
+        
+        updateStatus('📡 Broadcasting via parent/top windows...', 'blue');
         
     } catch (e) {
-        updateStatus('❌ Cannot access widgets: ' + e.message, 'red');
-        console.log('Cannot access parent document:', e.message);
+        console.log('Could not broadcast via parent:', e.message);
     }
+    
+    // Try sending to known Caspio domains
+    var caspioOrigins = [
+        'https://c0acv999.caspio.com',
+        'https://caspio.com',
+        '*'
+    ];
+    
+    caspioOrigins.forEach(function(origin) {
+        try {
+            window.postMessage({
+                type: 'caspio_global_auth',
+                username: username,
+                password: password,
+                targetOrigin: origin
+            }, origin);
+        } catch (e) {}
+    });
+    
+    // Create a polling system to keep broadcasting
+    var broadcastCount = 0;
+    var maxBroadcasts = 10;
+    
+    var broadcastInterval = setInterval(function() {
+        broadcastCount++;
+        
+        if (broadcastCount > maxBroadcasts) {
+            clearInterval(broadcastInterval);
+            updateStatus('✅ Broadcasting complete (' + maxBroadcasts + ' attempts)', 'green');
+            return;
+        }
+        
+        // Keep updating the global auth data
+        try {
+            window.parent.mmvcs_current_auth = {
+                username: username,
+                password: password,
+                timestamp: Date.now(),
+                attempt: broadcastCount
+            };
+            
+            window.top.mmvcs_current_auth = {
+                username: username,
+                password: password,
+                timestamp: Date.now(),
+                attempt: broadcastCount
+            };
+        } catch (e) {}
+        
+        updateStatus('📡 Broadcasting attempt ' + broadcastCount + '/' + maxBroadcasts, 'blue');
+        
+    }, 2000);
 }
 
 // Check for credentials every 2 seconds
