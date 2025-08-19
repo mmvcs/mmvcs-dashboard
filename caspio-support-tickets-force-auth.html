@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Support Tickets (Force Auth)</title>
+<style>
+body { margin: 0; padding: 0; font-family: Arial, sans-serif; }
+#auth-indicator { 
+    position: fixed; 
+    top: 5px; 
+    right: 5px; 
+    background: #f0f8ff; 
+    padding: 5px 10px; 
+    border-radius: 3px; 
+    font-size: 11px; 
+    border: 1px solid #ccc;
+    z-index: 1000;
+    max-width: 200px;
+}
+#caspio-container { width: 100%; height: 100vh; }
+</style>
+</head>
+<body>
+<div id="auth-indicator">🔍 Initializing...</div>
+<div id="caspio-container">
+    <!-- Caspio widget will be loaded after authentication check -->
+</div>
+
+<script>
+var authIndicator = document.getElementById('auth-indicator');
+var caspioContainer = document.getElementById('caspio-container');
+var widgetLoaded = false;
+
+function updateIndicator(message, color) {
+    authIndicator.innerHTML = message;
+    authIndicator.style.color = color || '#333';
+    console.log('Support Tickets Force Auth:', message);
+}
+
+function loadCaspioWidget() {
+    if (widgetLoaded) return;
+    widgetLoaded = true;
+    
+    updateIndicator('📦 Loading Caspio widget...', 'blue');
+    
+    // Create and inject the Caspio script
+    var script = document.createElement('script');
+    script.type = 'text/javascript';
+    script.src = 'https://c0acv999.caspio.com/dp/01217000b3314ae88b7949d3bc8d/emb';
+    script.onload = function() {
+        updateIndicator('✅ Widget loaded', 'green');
+        // Start monitoring for login forms
+        setTimeout(monitorForLoginForms, 2000);
+    };
+    script.onerror = function() {
+        updateIndicator('❌ Widget load failed', 'red');
+    };
+    
+    caspioContainer.appendChild(script);
+}
+
+function monitorForLoginForms() {
+    updateIndicator('🔍 Monitoring for login forms...', 'blue');
+    
+    var attempts = 0;
+    var maxAttempts = 15;
+    
+    var monitorInterval = setInterval(function() {
+        attempts++;
+        updateIndicator('🔍 Checking attempt ' + attempts + '/15', 'blue');
+        
+        // Check if page content suggests we need to login
+        var bodyText = document.body.innerText.toLowerCase();
+        var needsAuth = bodyText.includes('sign in') || 
+                       bodyText.includes('log in') || 
+                       bodyText.includes('login required') ||
+                       bodyText.includes('please login') ||
+                       bodyText.includes('authentication required') ||
+                       bodyText.includes('access denied');
+        
+        // Look for login forms
+        var forms = document.querySelectorAll('form');
+        var loginFormFound = false;
+        
+        forms.forEach(function(form) {
+            var hasUsernameField = form.querySelector('input[type="text"], input[name*="user"], input[name*="login"], input[name*="email"]');
+            var hasPasswordField = form.querySelector('input[type="password"], input[name*="pass"]');
+            
+            if (hasUsernameField && hasPasswordField) {
+                loginFormFound = true;
+                updateIndicator('🔐 Login form detected!', 'orange');
+                
+                // Get stored credentials and fill form
+                var username = localStorage.getItem('mmvcs_user') || sessionStorage.getItem('mmvcs_user');
+                var password = localStorage.getItem('mmvcs_pass') || sessionStorage.getItem('mmvcs_pass');
+                
+                if (username && password) {
+                    fillLoginForm(form, username, password);
+                } else {
+                    updateIndicator('⚠ No credentials stored', 'red');
+                }
+            }
+        });
+        
+        // If we detect need for auth but no login form, try to force a refresh
+        if (needsAuth && !loginFormFound && attempts > 5) {
+            updateIndicator('🔄 Auth needed, refreshing...', 'orange');
+            setTimeout(function() {
+                location.reload();
+            }, 1000);
+            clearInterval(monitorInterval);
+            return;
+        }
+        
+        // If no auth indicators found and we have content, assume success
+        if (!needsAuth && !loginFormFound && attempts > 8) {
+            var hasContent = bodyText.includes('support') || bodyText.includes('request') || bodyText.includes('form');
+            if (hasContent) {
+                updateIndicator('✅ Widget authenticated', 'green');
+                clearInterval(monitorInterval);
+            }
+        }
+        
+        if (attempts >= maxAttempts) {
+            clearInterval(monitorInterval);
+            updateIndicator('⚠ Monitoring complete', '#666');
+        }
+        
+    }, 2000);
+}
+
+function fillLoginForm(form, username, password) {
+    updateIndicator('🔑 Filling login form...', 'blue');
+    
+    var usernameField = form.querySelector('input[type="text"], input[name*="user"], input[name*="login"], input[name*="email"]');
+    var passwordField = form.querySelector('input[type="password"], input[name*="pass"]');
+    var submitButton = form.querySelector('input[type="submit"], button[type="submit"], button');
+    
+    if (usernameField && passwordField) {
+        // Clear and fill fields
+        usernameField.value = '';
+        passwordField.value = '';
+        
+        setTimeout(function() {
+            usernameField.value = username;
+            passwordField.value = password;
+            
+            // Trigger events
+            ['input', 'change', 'keyup', 'blur', 'focus'].forEach(function(eventType) {
+                usernameField.dispatchEvent(new Event(eventType, {bubbles: true}));
+                passwordField.dispatchEvent(new Event(eventType, {bubbles: true}));
+            });
+            
+            updateIndicator('📝 Form filled, submitting...', 'blue');
+            
+            // Submit form
+            setTimeout(function() {
+                if (submitButton) {
+                    submitButton.click();
+                    updateIndicator('🚀 Form submitted', 'green');
+                }
+                
+                // Also try form.submit() as backup
+                setTimeout(function() {
+                    if (form.submit) {
+                        form.submit();
+                    }
+                }, 500);
+                
+            }, 300);
+            
+        }, 200);
+    }
+}
+
+function checkForCredentials() {
+    var username = localStorage.getItem('mmvcs_user') || sessionStorage.getItem('mmvcs_user');
+    var password = localStorage.getItem('mmvcs_pass') || sessionStorage.getItem('mmvcs_pass');
+    
+    if (username && password) {
+        updateIndicator('🔐 Found credentials: ' + username, 'green');
+        loadCaspioWidget();
+        return true;
+    } else {
+        updateIndicator('⏳ Waiting for credentials...', '#666');
+        return false;
+    }
+}
+
+// Listen for authentication messages
+window.addEventListener('message', function(event) {
+    if (event.data && event.data.type === 'mmvcs_auth' && event.data.username) {
+        console.log('Received auth message:', event.data);
+        updateIndicator('📨 Received auth message', 'blue');
+        
+        // Store credentials
+        localStorage.setItem('mmvcs_user', event.data.username);
+        localStorage.setItem('mmvcs_pass', event.data.password);
+        
+        setTimeout(function() {
+            loadCaspioWidget();
+        }, 1000);
+    }
+});
+
+// Start checking for credentials
+setTimeout(function() {
+    if (!checkForCredentials()) {
+        // No credentials found, check periodically
+        var checkInterval = setInterval(function() {
+            if (checkForCredentials()) {
+                clearInterval(checkInterval);
+            }
+        }, 3000);
+    }
+}, 1000);
+
+console.log('Support Tickets force authentication wrapper loaded');
+</script>
+</body>
+</html>
