@@ -52,6 +52,7 @@ function fillForms() {
     }
     
     var attempts = 0;
+    var maxAttempts = 20; // More attempts
     var interval = setInterval(function() {
         attempts++;
         var forms = document.querySelectorAll('form');
@@ -63,50 +64,65 @@ function fillForms() {
             var submitBtn = form.querySelector('input[type="submit"], button[type="submit"], button');
             
             if (userField && passField && !userField.value) {
-                console.log('Filling form for widget:', widgetId);
+                console.log('Filling form for widget:', widgetId, 'attempt:', attempts);
                 userField.value = username;
                 passField.value = password;
                 
-                // Trigger events
-                ['input', 'change', 'keyup'].forEach(function(eventType) {
+                // Trigger more events to ensure recognition
+                ['input', 'change', 'keyup', 'keydown', 'blur', 'focus'].forEach(function(eventType) {
                     userField.dispatchEvent(new Event(eventType, { bubbles: true }));
                     passField.dispatchEvent(new Event(eventType, { bubbles: true }));
                 });
                 
+                // Multiple submission attempts
                 setTimeout(function() {
                     if (submitBtn) {
                         submitBtn.click();
                         console.log('Submitted form for widget:', widgetId);
+                        
+                        // Also try form.submit()
+                        setTimeout(function() {
+                            if (form) form.submit();
+                        }, 200);
+                        
+                        // And trigger Enter key
+                        setTimeout(function() {
+                            passField.dispatchEvent(new KeyboardEvent('keydown', {
+                                key: 'Enter', code: 'Enter', which: 13, keyCode: 13, bubbles: true
+                            }));
+                        }, 400);
                     }
-                }, 500);
+                }, 300); // Shorter delay
                 
                 filled = true;
             }
         });
         
-        if (filled || attempts > 10) clearInterval(interval);
-    }, 2000);
+        if (filled || attempts > maxAttempts) clearInterval(interval);
+    }, 1500); // Check more frequently
 }
 
-// Check for credentials every 3 seconds
-setInterval(function() {
+// Check for credentials more frequently
+var credentialCheck = setInterval(function() {
     var username = localStorage.getItem('mmvcs_user');
     if (username && !loaded) {
         console.log('Widget found credentials, loading:', widgetId);
+        clearInterval(credentialCheck);
         loadWidget();
     }
-}, 3000);
+}, 1000); // Check every 1 second instead of 3
 
 // Initial check
 setTimeout(function() {
     var username = localStorage.getItem('mmvcs_user');
     if (username) {
         console.log('Widget found initial credentials:', widgetId);
+        clearInterval(credentialCheck);
         loadWidget();
     } else {
         console.log('Widget waiting for credentials:', widgetId);
     }
-}, 1000);
+}, 500); // Check sooner
 
 // Force load after authentication message
 window.addEventListener('storage', function(e) {
