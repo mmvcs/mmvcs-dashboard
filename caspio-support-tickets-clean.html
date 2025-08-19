@@ -17,7 +17,9 @@ body {
 </head>
 <body>
 <div id="caspio-container">
-    <!-- Caspio widget will be loaded after authentication check -->
+    <div style="text-align: center; padding: 50px; color: #666; font-size: 14px;">
+        Waiting for authentication...
+    </div>
 </div>
 
 <script>
@@ -27,6 +29,9 @@ var widgetLoaded = false;
 function loadCaspioWidget() {
     if (widgetLoaded) return;
     widgetLoaded = true;
+    
+    // Clear the waiting message
+    caspioContainer.innerHTML = '';
     
     var script = document.createElement('script');
     script.type = 'text/javascript';
@@ -137,6 +142,17 @@ function checkForCredentials() {
 // Listen for authentication messages
 window.addEventListener('message', function(event) {
     if (event.data && event.data.type === 'mmvcs_auth' && event.data.username) {
+        console.log('Support Tickets received authentication for:', event.data.username);
+        
+        // Clear any stored credentials first
+        try {
+            localStorage.removeItem('mmvcs_user');
+            localStorage.removeItem('mmvcs_pass');
+            sessionStorage.removeItem('mmvcs_user');
+            sessionStorage.removeItem('mmvcs_pass');
+        } catch(e) {}
+        
+        // Store new credentials
         localStorage.setItem('mmvcs_user', event.data.username);
         localStorage.setItem('mmvcs_pass', event.data.password);
         
