@@ -148,11 +148,6 @@ function authenticate() {
         sendToDashboard(username, password);
     }, 500);
     
-    // Refresh the page after dashboard opens
-    setTimeout(function() {
-        window.parent.location.reload();
-    }, 2000);
-    
     // Show success
     showMessage('✓ Login successful', 'success');
     loginBtn.textContent = 'Logged In';
