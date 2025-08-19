@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Sales Comparison</title>
+<style>
+body { 
+    margin: 0; 
+    padding: 0; 
+    font-family: Arial, sans-serif; 
+}
+#caspio-container { 
+    width: 100%; 
+    height: 100vh; 
+}
+</style>
+</head>
+<body>
+<div id="caspio-container">
+    <script type="text/javascript" src="https://c0acv999.caspio.com/dp/01217000201cfed888f24342b18f/emb"></script>
+</div>
+
+<script>
+function checkForCredentials() {
+    var username = '';
+    var password = '';
+    var found = false;
+    
+    try {
+        var localUser = localStorage.getItem('mmvcs_user');
+        var localPass = localStorage.getItem('mmvcs_pass');
+        if (localUser && localPass) {
+            username = localUser;
+            password = localPass;
+            found = true;
+        }
+    } catch (e) {}
+    
+    if (!found) {
+        try {
+            var sessionUser = sessionStorage.getItem('mmvcs_user');
+            var sessionPass = sessionStorage.getItem('mmvcs_pass');
+            if (sessionUser && sessionPass) {
+                username = sessionUser;
+                password = sessionPass;
+                found = true;
+            }
+        } catch (e) {}
+    }
+    
+    if (found) {
+        setTimeout(function() {
+            authenticateWidget(username, password);
+        }, 2000);
+    }
+    
+    return found;
+}
+
+function authenticateWidget(username, password) {
+    var attempts = 0;
+    var maxAttempts = 10;
+    
+    var authInterval = setInterval(function() {
+        attempts++;
+        
+        var forms = document.querySelectorAll('form');
+        var authenticated = false;
+        
+        forms.forEach(function(form, index) {
+            var usernameField = form.querySelector('input[type="text"], input[type="email"], input[name*="user"], input[name*="login"]');
+            var passwordField = form.querySelector('input[type="password"], input[name*="pass"]');
+            var submitButton = form.querySelector('input[type="submit"], button[type="submit"], button');
+            
+            if (usernameField && passwordField && !usernameField.value) {
+                usernameField.value = username;
+                passwordField.value = password;
+                
+                ['input', 'change', 'keyup', 'blur'].forEach(function(eventType) {
+                    usernameField.dispatchEvent(new Event(eventType, {bubbles: true}));
+                    passwordField.dispatchEvent(new Event(eventType, {bubbles: true}));
+                });
+                
+                setTimeout(function() {
+                    if (submitButton) {
+                        submitButton.click();
+                    }
+                    if (form.submit) {
+                        form.submit();
+                    }
+                }, 300);
+                
+                authenticated = true;
+            }
+        });
+        
+        if (authenticated || attempts >= maxAttempts) {
+            clearInterval(authInterval);
+        }
+    }, 1000);
+}
+
+// Listen for authentication messages
+window.addEventListener('message', function(event) {
+    if (event.data && event.data.type === 'mmvcs_auth' && event.data.username) {
+        setTimeout(function() {
+            authenticateWidget(event.data.username, event.data.password);
+        }, 1000);
+    }
+});
+
+// Start checking for credentials
+setTimeout(function() {
+    if (!checkForCredentials()) {
+        setInterval(checkForCredentials, 3000);
+    }
+}, 1000);
+</script>
+</body>
+</html>
