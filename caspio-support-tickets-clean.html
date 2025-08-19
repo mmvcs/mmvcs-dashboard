@@ -130,15 +130,8 @@ function fillLoginForm(form, username, password) {
 }
 
 function checkForCredentials() {
-    var username = localStorage.getItem('mmvcs_user') || sessionStorage.getItem('mmvcs_user');
-    var password = localStorage.getItem('mmvcs_pass') || sessionStorage.getItem('mmvcs_pass');
-    
-    if (username && password) {
-        loadCaspioWidget();
-        return true;
-    } else {
-        return false;
-    }
+    // Don't auto-load with stored credentials - wait for fresh authentication
+    return false;
 }
 
 // Listen for authentication messages
@@ -153,16 +146,8 @@ window.addEventListener('message', function(event) {
     }
 });
 
-// Start checking for credentials
-setTimeout(function() {
-    if (!checkForCredentials()) {
-        var checkInterval = setInterval(function() {
-            if (checkForCredentials()) {
-                clearInterval(checkInterval);
-            }
-        }, 3000);
-    }
-}, 1000);
+// Wait for authentication message - don't auto-load
+console.log('Support Tickets widget ready - waiting for authentication');
 </script>
 </body>
 </html>
