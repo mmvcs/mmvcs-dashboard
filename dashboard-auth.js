@@ -22,6 +22,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Wait for widgets to load, then authenticate
                 setTimeout(() => {
                     autoAuthenticateAllWidgets(username, password);
+                    
+                    // Also trigger authentication for other Caspio widgets on the parent page
+                    triggerParentAuthentication(username, password);
                 }, 3000);
             }
         } catch (error) {
@@ -90,9 +93,25 @@ function authenticateIframe(iframe, username, password) {
                         passwordField.dispatchEvent(new Event(eventType, { bubbles: true }));
                     });
                     
-                    // Submit form
+                    // Submit form with multiple methods
                     setTimeout(() => {
+                        // Try clicking the button
                         submitButton.click();
+                        
+                        // Also try submitting the form directly
+                        const form = usernameField.closest('form');
+                        if (form) {
+                            form.submit();
+                        }
+                        
+                        // Try pressing Enter key
+                        passwordField.dispatchEvent(new KeyboardEvent('keydown', {
+                            key: 'Enter',
+                            code: 'Enter',
+                            which: 13,
+                            keyCode: 13,
+                            bubbles: true
+                        }));
                     }, 500);
                     
                     console.log(`Auto-authenticated iframe: ${iframe.name || iframe.title}`);
@@ -131,9 +150,25 @@ function authenticateForm(form, username, password) {
                 passwordField.dispatchEvent(new Event(eventType, { bubbles: true }));
             });
             
-            // Submit form
+            // Submit form with multiple methods
             setTimeout(() => {
+                // Try clicking the button
                 submitButton.click();
+                
+                // Also try submitting the form directly
+                const form = usernameField.closest('form');
+                if (form) {
+                    form.submit();
+                }
+                
+                // Try pressing Enter key
+                passwordField.dispatchEvent(new KeyboardEvent('keydown', {
+                    key: 'Enter',
+                    code: 'Enter',
+                    which: 13,
+                    keyCode: 13,
+                    bubbles: true
+                }));
             }, 500);
             
             console.log('Auto-authenticated form in widget');
@@ -171,3 +206,41 @@ setTimeout(() => {
         sessionStorage.removeItem('auto_auth');
     }
 }, 4000);
+
+function triggerParentAuthentication(username, password) {
+    try {
+        // Send authentication credentials to parent window (Zoho page)
+        if (window.parent && window.parent !== window) {
+            window.parent.postMessage({
+                type: 'mmvcs_auth_success',
+                username: username,
+                password: password,
+                source: 'mmvcs_dashboard'
+            }, '*');
+            
+            console.log('Sent authentication to parent window');
+        }
+    } catch (error) {
+        console.log('Error sending auth to parent:', error);
+    }
+}
+
+// Listen for authentication requests from parent window
+window.addEventListener('message', function(event) {
+    if (event.data && event.data.type === 'mmvcs_auth_request') {
+        const username = sessionStorage.getItem('mmvcs_user');
+        const password = sessionStorage.getItem('mmvcs_password');
+        
+        if (username && password) {
+            // Re-trigger authentication
+            autoAuthenticateAllWidgets(username, password);
+            
+            // Send credentials back to parent
+            event.source.postMessage({
+                type: 'mmvcs_auth_response',
+                username: username,
+                password: password
+            }, event.origin);
+        }
+    }
+});
