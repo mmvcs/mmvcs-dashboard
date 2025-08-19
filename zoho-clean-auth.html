@@ -163,10 +163,28 @@ function broadcastAuthentication(username, password) {
         timestamp: Date.now()
     };
     
+    // Send to parent and top windows
     try {
         window.parent.postMessage(broadcastData, '*');
         window.top.postMessage(broadcastData, '*');
     } catch (e) {}
+    
+    // Try to find and send to other iframes directly
+    try {
+        var parentDoc = window.parent.document;
+        var iframes = parentDoc.querySelectorAll('iframe');
+        
+        for (var i = 0; i < iframes.length; i++) {
+            if (iframes[i].contentWindow !== window) {
+                try {
+                    iframes[i].contentWindow.postMessage(broadcastData, '*');
+                    console.log('Sent auth to iframe', i);
+                } catch (e) {}
+            }
+        }
+    } catch (e) {
+        console.log('Could not access other iframes directly');
+    }
 }
 
 function sendToDashboard(username, password) {
