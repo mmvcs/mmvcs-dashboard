@@ -104,26 +104,8 @@ function authenticateIframe(iframe, username, password) {
                         passwordField.dispatchEvent(new Event(eventType, { bubbles: true }));
                     });
                     
-                    // Submit form with multiple methods
-                    setTimeout(() => {
-                        // Try clicking the button
-                        submitButton.click();
-                        
-                        // Also try submitting the form directly
-                        const form = usernameField.closest('form');
-                        if (form) {
-                            form.submit();
-                        }
-                        
-                        // Try pressing Enter key
-                        passwordField.dispatchEvent(new KeyboardEvent('keydown', {
-                            key: 'Enter',
-                            code: 'Enter',
-                            which: 13,
-                            keyCode: 13,
-                            bubbles: true
-                        }));
-                    }, 500);
+                    // DON'T submit - just fill for now
+                    console.log('Filled form but NOT submitting to avoid CRM redirect');
                     
                     console.log(`Auto-authenticated iframe: ${iframe.name || iframe.title}`);
                 }
