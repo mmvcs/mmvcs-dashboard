@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>MMVCS Simple Auth</title>
+</head>
+<body style="margin:0;padding:15px;font-family:Arial,sans-serif;background:#f0f8ff;">
+<div style="text-align:center;margin-bottom:15px;">
+<h3 style="margin:0;color:#333;">MMVCS Authentication</h3>
+</div>
+
+<!-- Login Section -->
+<div style="background:white;padding:15px;border-radius:8px;margin-bottom:15px;border:1px solid #ddd;">
+<h4 style="margin:0 0 10px 0;">Login</h4>
+<p>Username: <input type="text" id="username" style="padding:5px;width:200px;"></p>
+<p>Password: <input type="password" id="password" style="padding:5px;width:200px;"></p>
+<p><button onclick="authenticate()" style="padding:8px 16px;background:#007bff;color:white;border:none;border-radius:4px;">Login</button></p>
+<div id="login-status" style="margin-top:10px;font-size:12px;"></div>
+</div>
+
+<!-- Status Section -->
+<div style="background:white;padding:15px;border-radius:8px;border:1px solid #ddd;">
+<h4 style="margin:0 0 10px 0;">Authentication Status</h4>
+<div id="auth-status" style="font-size:12px;color:#666;">Ready for authentication</div>
+<div id="caspio-status" style="font-size:12px;color:#666;margin-top:10px;">No Caspio widgets detected</div>
+</div>
+
+<script>
+var currentUsername = '';
+var currentPassword = '';
+
+function updateLoginStatus(message, color) {
+    document.getElementById('login-status').innerHTML = message;
+    document.getElementById('login-status').style.color = color || '#333';
+}
+
+function updateAuthStatus(message, color) {
+    document.getElementById('auth-status').innerHTML = message;
+    document.getElementById('auth-status').style.color = color || '#333';
+}
+
+function updateCaspioStatus(message, color) {
+    document.getElementById('caspio-status').innerHTML = message;
+    document.getElementById('caspio-status').style.color = color || '#333';
+}
+
+function authenticate() {
+    var username = document.getElementById('username').value;
+    var password = document.getElementById('password').value;
+    
+    if (!username || !password) {
+        updateLoginStatus('Please enter both username and password', 'red');
+        return;
+    }
+    
+    currentUsername = username;
+    currentPassword = password;
+    
+    updateLoginStatus('✓ Authenticated as: ' + username, 'green');
+    updateAuthStatus('Broadcasting authentication...', 'blue');
+    
+    // Store in multiple locations
+    try {
+        localStorage.setItem('mmvcs_user', username);
+        localStorage.setItem('mmvcs_pass', password);
+        sessionStorage.setItem('mmvcs_user', username);
+        sessionStorage.setItem('mmvcs_pass', password);
+    } catch(e) {}
+    
+    // Try to broadcast
+    broadcastAuthentication(username, password);
+    
+    // Start looking for and authenticating forms
+    setTimeout(function() {
+        findAndAuthenticateForms(username, password);
+    }, 1000);
+}
+
+function broadcastAuthentication(username, password) {
+    var broadcastData = {
+        type: 'mmvcs_auth',
+        username: username,
+        password: password,
+        timestamp: Date.now()
+    };
+    
+    // Try multiple broadcast methods
+    try {
+        window.parent.postMessage(broadcastData, '*');
+        window.top.postMessage(broadcastData, '*');
+        updateAuthStatus('✓ Authentication broadcasted', 'green');
+    } catch (e) {
+        updateAuthStatus('⚠ Limited broadcast capability', 'orange');
+    }
+}
+
+function findAndAuthenticateForms(username, password) {
+    updateCaspioStatus('🔍 Scanning for forms to authenticate...', 'blue');
+    
+    var authenticatedCount = 0;
+    
+    // First, try to find forms in our own document
+    var localForms = document.querySelectorAll('form');
+    updateCaspioStatus('Found ' + localForms.length + ' local forms', 'gray');
+    
+    // Try to access parent document forms
+    try {
+        var parentDoc = window.parent.document;
+        var allForms = parentDoc.querySelectorAll('form');
+        var allIframes = parentDoc.querySelectorAll('iframe');
+        
+        updateCaspioStatus('Found ' + allForms.length + ' forms and ' + allIframes.length + ' iframes in parent', 'blue');
+        
+        // Authenticate forms directly in parent document
+        allForms.forEach(function(form, index) {
+            setTimeout(function() {
+                if (authenticateForm(form, username, password, 'parent-form-' + index)) {
+                    authenticatedCount++;
+                }
+            }, index * 300);
+        });
+        
+        // Try to send messages to iframes
+        allIframes.forEach(function(iframe, index) {
+            setTimeout(function() {
+                try {
+                    var authData = {
+                        type: 'caspio_auth',
+                        username: username,
+                        password: password
+                    };
+                    iframe.contentWindow.postMessage(authData, '*');
+                    console.log('Sent auth to iframe', index, iframe.src);
+                } catch (e) {
+                    console.log('Could not send to iframe', index, ':', e.message);
+                }
+            }, (allForms.length + index) * 300);
+        });
+        
+        setTimeout(function() {
+            updateCaspioStatus('✅ Completed authentication attempts (' + authenticatedCount + ' forms)', 'green');
+        }, (allForms.length + allIframes.length) * 300 + 1000);
+        
+    } catch (e) {
+        updateCaspioStatus('❌ Cannot access parent forms: ' + e.message, 'red');
+        
+        // Fallback: just broadcast and hope for the best
+        setTimeout(function() {
+            updateCaspioStatus('📡 Broadcasting only (cross-origin restrictions)', 'orange');
+        }, 1000);
+    }
+}
+
+function authenticateForm(form, username, password, formId) {
+    try {
+        // Look for username and password fields
+        var usernameField = form.querySelector('input[type="text"], input[type="email"], input[name*="user"], input[name*="login"], input[name*="email"]');
+        var passwordField = form.querySelector('input[type="password"], input[name*="pass"]');
+        var submitButton = form.querySelector('input[type="submit"], button[type="submit"], button');
+        
+        if (usernameField && passwordField) {
+            // Fill the fields
+            usernameField.value = username;
+            passwordField.value = password;
+            
+            // Trigger events to notify the form
+            ['input', 'change', 'keyup', 'blur'].forEach(function(eventType) {
+                usernameField.dispatchEvent(new Event(eventType, {bubbles: true}));
+                passwordField.dispatchEvent(new Event(eventType, {bubbles: true}));
+            });
+            
+            // Try to submit the form
+            setTimeout(function() {
+                if (submitButton) {
+                    submitButton.click();
+                }
+                if (form.submit) {
+                    form.submit();
+                }
+            }, 200);
+            
+            console.log('Authenticated form:', formId);
+            return true;
+        }
+    } catch (e) {
+        console.log('Error authenticating form:', formId, e.message);
+    }
+    return false;
+}
+
+// Check for existing credentials on load
+setTimeout(function() {
+    var storedUser = localStorage.getItem('mmvcs_user') || sessionStorage.getItem('mmvcs_user');
+    var storedPass = localStorage.getItem('mmvcs_pass') || sessionStorage.getItem('mmvcs_pass');
+    
+    if (storedUser && storedPass) {
+        document.getElementById('username').value = storedUser;
+        document.getElementById('password').value = storedPass;
+        updateLoginStatus('Found stored credentials for: ' + storedUser, 'blue');
+        updateAuthStatus('Credentials available, click Login to authenticate', 'blue');
+    }
+}, 500);
+
+// Listen for authentication requests
+window.addEventListener('message', function(event) {
+    if (event.data && event.data.type === 'request_auth' && currentUsername && currentPassword) {
+        // Someone is requesting authentication - send it
+        event.source.postMessage({
+            type: 'mmvcs_auth',
+            username: currentUsername,
+            password: currentPassword
+        }, '*');
+        console.log('Sent auth to requesting source');
+    }
+});
+
+console.log('MMVCS Simple Authentication loaded');
+</script>
+</body>
+</html>
