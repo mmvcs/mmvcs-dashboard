@@ -19,13 +19,24 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Clean URL to remove credentials
                 window.history.replaceState({}, document.title, window.location.pathname);
                 
-                // Wait for widgets to load, then authenticate
+                // Start authentication immediately and repeatedly
+                autoAuthenticateAllWidgets(username, password);
+                
+                // Also start immediately
                 setTimeout(() => {
                     autoAuthenticateAllWidgets(username, password);
-                    
-                    // Also trigger authentication for other Caspio widgets on the parent page
+                }, 500);
+                
+                // And again
+                setTimeout(() => {
+                    autoAuthenticateAllWidgets(username, password);
+                }, 1000);
+                
+                // And again
+                setTimeout(() => {
+                    autoAuthenticateAllWidgets(username, password);
                     triggerParentAuthentication(username, password);
-                }, 3000);
+                }, 2000);
             }
         } catch (error) {
             console.error('Error processing authentication:', error);
