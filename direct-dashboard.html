@@ -16,36 +16,41 @@
             <div class="widgets-grid">
                 <div class="widget-container full-width welcome-widget">
                     <h3></h3>
-                    <div class="widget-frame" id="widget-0">
-                        <!-- Widget will be loaded here -->
+                    <div class="widget-frame">
+                        <iframe src="https://dashboard.mmvcs-sales.com/caspio-widget-wrapper.html?widget=01217000f2c3610f806e481a9264" 
+                                width="100%" height="600" frameborder="0" scrolling="auto"></iframe>
                     </div>
                 </div>
 
                 <div class="widget-container full-width">
                     <h3>Sales Comparison This Year vs. Last Year</h3>
-                    <div class="widget-frame" id="widget-1">
-                        <!-- Widget will be loaded here -->
+                    <div class="widget-frame">
+                        <iframe src="https://dashboard.mmvcs-sales.com/sales-comparison-wrapper.html" 
+                                width="100%" height="600" frameborder="0" scrolling="auto"></iframe>
                     </div>
                 </div>
 
                 <div class="widget-container full-width">
                     <h3>Sales Chart by Month</h3>
-                    <div class="widget-frame" id="widget-2">
-                        <!-- Widget will be loaded here -->
+                    <div class="widget-frame">
+                        <iframe src="https://dashboard.mmvcs-sales.com/caspio-widget-wrapper.html?widget=0121700013fadbf0a2db4aca8f73" 
+                                width="100%" height="600" frameborder="0" scrolling="auto"></iframe>
                     </div>
                 </div>
 
                 <div class="widget-container">
-                    <h3>Destination Mix - Current Year</h3>
-                    <div class="widget-frame" id="widget-3">
-                        <!-- Widget will be loaded here -->
+                    <h3>Support Tickets</h3>
+                    <div class="widget-frame">
+                        <iframe src="https://dashboard.mmvcs-sales.com/support-tickets-wrapper.html" 
+                                width="100%" height="600" frameborder="0" scrolling="auto"></iframe>
                     </div>
                 </div>
 
                 <div class="widget-container">
                     <h3>Destination Mix - Last Year</h3>
-                    <div class="widget-frame" id="widget-4">
-                        <!-- Widget will be loaded here -->
+                    <div class="widget-frame">
+                        <iframe src="https://dashboard.mmvcs-sales.com/caspio-widget-wrapper.html?widget=01217000301880de360842d1adb1" 
+                                width="100%" height="600" frameborder="0" scrolling="auto"></iframe>
                     </div>
                 </div>
             </div>
@@ -53,29 +58,6 @@
     </div>
 
     <script>
-        const widgetConfigs = [
-            {
-                id: '01217000f2c3610f806e481a9264',
-                container: 'widget-0'
-            },
-            {
-                id: '01217000201cfed888f24342b18f',
-                container: 'widget-1'
-            },
-            {
-                id: '0121700013fadbf0a2db4aca8f73',
-                container: 'widget-2'
-            },
-            {
-                id: '01217000564ddc00d2ab4c7aac4d',
-                container: 'widget-3'
-            },
-            {
-                id: '01217000301880de360842d1adb1',
-                container: 'widget-4'
-            }
-        ];
-        
         document.addEventListener('DOMContentLoaded', () => {
             // Check for authentication credentials in URL
             const urlParams = new URLSearchParams(window.location.search);
@@ -88,107 +70,25 @@
                     const [username, password] = decoded.split(':');
                     
                     if (username && password) {
+                        // Store credentials for wrapper widgets
+                        localStorage.setItem('mmvcs_user', username);
+                        localStorage.setItem('mmvcs_pass', password);
+                        sessionStorage.setItem('mmvcs_user', username);
+                        sessionStorage.setItem('mmvcs_pass', password);
+                        
                         // Clean URL to remove credentials
                         window.history.replaceState({}, document.title, window.location.pathname);
                         
-                        console.log('Loading authenticated widgets for:', username);
+                        console.log('Credentials stored for wrapper widgets:', username);
                         
-                        // Load widgets with authentication parameters
-                        loadAuthenticatedWidgets(username, password);
+                        // Show success message
+                        showSuccessMessage();
                     }
                 } catch (error) {
                     console.error('Error processing authentication:', error);
-                    loadNormalWidgets();
                 }
-            } else {
-                // No authentication - load widgets normally
-                loadNormalWidgets();
             }
         });
-
-        function loadAuthenticatedWidgets(username, password) {
-            console.log('Loading widgets with direct authentication');
-            
-            // Create authenticated widget URLs
-            widgetConfigs.forEach((config, index) => {
-                setTimeout(() => {
-                    loadAuthenticatedWidget(config, username, password);
-                }, index * 200); // Stagger loading slightly
-            });
-            
-            showSuccessMessage();
-        }
-
-        function loadAuthenticatedWidget(config, username, password) {
-            const container = document.getElementById(config.container);
-            
-            // Try different approaches to load authenticated widget
-            console.log(`Loading authenticated widget ${config.id}`);
-            
-            // Method 1: Try to load with credentials as URL parameters
-            const baseUrl = `https://c0acv999.caspio.com/dp/${config.id}`;
-            const authenticatedUrls = [
-                `${baseUrl}/emb?user=${encodeURIComponent(username)}&pass=${encodeURIComponent(password)}`,
-                `${baseUrl}/emb?username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`,
-                `${baseUrl}/emb?login=${encodeURIComponent(username)}&pwd=${encodeURIComponent(password)}`,
-                `${baseUrl}/emb?auth=${encodeURIComponent(btoa(username + ':' + password))}`,
-                `${baseUrl}/emb` // Fallback to normal URL
-            ];
-            
-            // Try each URL until one works
-            tryWidgetUrls(container, authenticatedUrls, 0, config.id);
-        }
-
-        function tryWidgetUrls(container, urls, index, widgetId) {
-            if (index >= urls.length) {
-                console.log(`All URL attempts failed for widget ${widgetId}`);
-                container.innerHTML = '<p style="color: red;">Failed to load authenticated widget</p>';
-                return;
-            }
-            
-            const url = urls[index];
-            console.log(`Trying URL ${index + 1} for widget ${widgetId}: ${url}`);
-            
-            // Use script tag for proper JavaScript execution
-            const script = document.createElement('script');
-            script.type = 'text/javascript';
-            script.src = url;
-            
-            script.onload = () => {
-                console.log(`Widget ${widgetId} script loaded with URL ${index + 1}`);
-                
-                // Check if widget shows login form after loading
-                setTimeout(() => {
-                    const loginForms = container.querySelectorAll('form input[type="password"]');
-                    if (loginForms.length > 0) {
-                        console.log(`URL ${index + 1} still shows login form, trying next...`);
-                        container.innerHTML = '';
-                        tryWidgetUrls(container, urls, index + 1, widgetId);
-                        return;
-                    }
-                    console.log(`Widget ${widgetId} successfully loaded without login form`);
-                }, 3000);
-            };
-            
-            script.onerror = () => {
-                console.log(`URL ${index + 1} failed to load for widget ${widgetId}, trying next...`);
-                container.innerHTML = '';
-                tryWidgetUrls(container, urls, index + 1, widgetId);
-            };
-            
-            container.innerHTML = '';
-            container.appendChild(script);
-        }
-
-        function loadNormalWidgets() {
-            console.log('Loading widgets without authentication');
-            widgetConfigs.forEach(config => {
-                const container = document.getElementById(config.container);
-                const script = document.createElement('script');
-                script.src = `https://c0acv999.caspio.com/dp/${config.id}/emb`;
-                container.appendChild(script);
-            });
-        }
 
         function showSuccessMessage() {
             const statusDiv = document.createElement('div');
@@ -198,8 +98,8 @@
                 box-shadow: 0 4px 8px rgba(0,0,0,0.2);
             `;
             statusDiv.innerHTML = `
-                ✅ <strong>Dashboard Loading</strong><br>
-                Attempting direct authentication
+                ✅ <strong>Dashboard Loaded</strong><br>
+                Using wrapper widgets for authentication
                 <button onclick="this.parentElement.remove()" style="float: right; background: none; border: none; color: white; cursor: pointer; font-size: 16px;">×</button>
             `;
             document.body.appendChild(statusDiv);
