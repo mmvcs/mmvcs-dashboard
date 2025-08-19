@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Auth Status</title>
+</head>
+<body style="margin:0;padding:10px;font-family:Arial,sans-serif;font-size:12px;background:#f8f9fa;">
+<div style="text-align:center;">🔐 Authentication Status</div>
+<div id="status" style="margin-top:10px;padding:8px;border-radius:4px;background:white;border:1px solid #ddd;"></div>
+<script>
+var statusDiv = document.getElementById('status');
+
+function updateStatus(message, color) {
+    statusDiv.innerHTML = message;
+    statusDiv.style.color = color || '#333';
+    console.log('Auth Status:', message);
+}
+
+function checkCredentials() {
+    var found = false;
+    var username = '';
+    var password = '';
+    var source = '';
+    
+    // Check localStorage
+    try {
+        var localUser = localStorage.getItem('mmvcs_user');
+        var localPass = localStorage.getItem('mmvcs_pass');
+        if (localUser && localPass) {
+            username = localUser;
+            password = localPass;
+            source = 'localStorage';
+            found = true;
+        }
+    } catch(e) {}
+    
+    // Check sessionStorage
+    if (!found) {
+        try {
+            var sessionUser = sessionStorage.getItem('mmvcs_user');
+            var sessionPass = sessionStorage.getItem('mmvcs_pass');
+            if (sessionUser && sessionPass) {
+                username = sessionUser;
+                password = sessionPass;
+                source = 'sessionStorage';
+                found = true;
+            }
+        } catch(e) {}
+    }
+    
+    // Check parent window
+    if (!found) {
+        try {
+            if (window.parent && window.parent.mmvcs_credentials) {
+                var creds = window.parent.mmvcs_credentials;
+                username = creds.username;
+                password = creds.password;
+                source = 'parent window';
+                found = true;
+            }
+        } catch(e) {}
+    }
+    
+    // Check top window
+    if (!found) {
+        try {
+            if (window.top && window.top.mmvcs_credentials) {
+                var creds = window.top.mmvcs_credentials;
+                username = creds.username;
+                password = creds.password;
+                source = 'top window';
+                found = true;
+            }
+        } catch(e) {}
+    }
+    
+    if (found) {
+        updateStatus('✓ Found credentials for: ' + username + '<br><small>Source: ' + source + '</small>', 'green');
+        
+        // Now authenticate other widgets
+        setTimeout(function() {
+            authenticateWidgets(username, password);
+        }, 1000);
+        
+        return true;
+    } else {
+        updateStatus('⏳ Waiting for login credentials...', '#666');
+        return false;
+    }
+}
+
+function authenticateWidgets(username, password) {
+    updateStatus('🔄 Broadcasting authentication...', 'blue');
+    
+    var attempts = 0;
+    
+    // Try to find and authenticate other iframes
+    try {
+        var parentDoc = window.parent.document;
+        var iframes = parentDoc.querySelectorAll('iframe');
+        
+        updateStatus('📡 Found ' + iframes.length + ' widgets, authenticating...', 'blue');
+        
+        for (var i = 0; i < iframes.length; i++) {
+            (function(iframe, index) {
+                // Skip our own iframe
+                if (iframe.contentWindow === window) return;
+                
+                setTimeout(function() {
+                    try {
+                        // Try multiple message types that Caspio might recognize
+                        var authMessages = [
+                            {type: 'caspio_auth', username: username, password: password},
+                            {type: 'auto_login', user: username, pass: password},
+                            {type: 'credentials', username: username, password: password},
+                            {type: 'login_data', username: username, password: password}
+                        ];
+                        
+                        authMessages.forEach(function(msg) {
+                            iframe.contentWindow.postMessage(msg, '*');
+                        });
+                        
+                        attempts++;
+                        console.log('Sent auth to iframe', index);
+                        
+                    } catch (e) {
+                        console.log('Could not authenticate iframe', index, ':', e.message);
+                    }
+                }, index * 200);
+                
+            })(iframes[i], i);
+        }
+        
+        setTimeout(function() {
+            updateStatus('✅ Authentication sent to ' + attempts + ' widgets', 'green');
+        }, iframes.length * 200 + 500);
+        
+    } catch (e) {
+        updateStatus('❌ Cannot access widgets: ' + e.message, 'red');
+        console.log('Cannot access parent document:', e.message);
+    }
+}
+
+// Check for credentials every 2 seconds
+updateStatus('🔍 Scanning for credentials...', '#666');
+
+var checkInterval = setInterval(function() {
+    if (checkCredentials()) {
+        // Found credentials, reduce checking frequency
+        clearInterval(checkInterval);
+        setInterval(checkCredentials, 10000); // Check every 10 seconds
+    }
+}, 2000);
+</script>
+</body>
+</html>

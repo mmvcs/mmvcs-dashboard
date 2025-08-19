@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>MMVCS Login</title>
+</head>
+<body style="margin:0;padding:20px;font-family:Arial,sans-serif;">
+<h3>MMVCS Login</h3>
+<form>
+<p>Username: <input type="text" id="u"></p>
+<p>Password: <input type="password" id="p"></p>
+<p><button type="button" onclick="login()">Login</button></p>
+</form>
+<p id="msg"></p>
+<script>
+function login() {
+  var u = document.getElementById('u').value;
+  var p = document.getElementById('p').value;
+  
+  if (!u || !p) {
+    document.getElementById('msg').innerHTML = 'Please enter both username and password';
+    return;
+  }
+  
+  document.getElementById('msg').innerHTML = 'Logged in as: ' + u;
+  
+  // Store credentials in multiple ways for maximum compatibility
+  try {
+    localStorage.setItem('mmvcs_user', u);
+    localStorage.setItem('mmvcs_pass', p);
+    localStorage.setItem('mmvcs_timestamp', Date.now());
+  } catch(e) {}
+  
+  try {
+    sessionStorage.setItem('mmvcs_user', u);
+    sessionStorage.setItem('mmvcs_pass', p);
+    sessionStorage.setItem('mmvcs_timestamp', Date.now());
+  } catch(e) {}
+  
+  // Try to store in parent window
+  try {
+    if (window.parent && window.parent !== window) {
+      window.parent.mmvcs_credentials = {
+        username: u,
+        password: p,
+        timestamp: Date.now()
+      };
+    }
+  } catch(e) {}
+  
+  // Try to store in top window
+  try {
+    if (window.top && window.top !== window) {
+      window.top.mmvcs_credentials = {
+        username: u,
+        password: p,
+        timestamp: Date.now()
+      };
+    }
+  } catch(e) {}
+  
+  // Set a global variable on this window
+  window.mmvcs_auth = {
+    username: u,
+    password: p,
+    timestamp: Date.now()
+  };
+  
+  console.log('Credentials stored in multiple locations');
+}
+
+// Check for existing credentials on load
+setTimeout(function() {
+  try {
+    var storedUser = localStorage.getItem('mmvcs_user') || sessionStorage.getItem('mmvcs_user');
+    if (storedUser) {
+      document.getElementById('u').value = storedUser;
+      document.getElementById('msg').innerHTML = 'Found stored credentials for: ' + storedUser;
+    }
+  } catch(e) {}
+}, 500);
+</script>
+</body>
+</html>
