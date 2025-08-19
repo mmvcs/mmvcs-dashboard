@@ -149,46 +149,35 @@
             const url = urls[index];
             console.log(`Trying URL ${index + 1} for widget ${widgetId}: ${url}`);
             
-            // Create iframe instead of script tag for better control
-            const iframe = document.createElement('iframe');
-            iframe.src = url;
-            iframe.width = '100%';
-            iframe.height = '600';
-            iframe.frameBorder = '0';
-            iframe.scrolling = 'auto';
+            // Use script tag for proper JavaScript execution
+            const script = document.createElement('script');
+            script.type = 'text/javascript';
+            script.src = url;
             
-            iframe.onload = () => {
-                console.log(`Widget ${widgetId} loaded with URL ${index + 1}`);
+            script.onload = () => {
+                console.log(`Widget ${widgetId} script loaded with URL ${index + 1}`);
                 
-                // Check if iframe shows login form
+                // Check if widget shows login form after loading
                 setTimeout(() => {
-                    try {
-                        const iframeDoc = iframe.contentDocument;
-                        if (iframeDoc) {
-                            const loginForm = iframeDoc.querySelector('form input[type="password"]');
-                            if (loginForm) {
-                                console.log(`URL ${index + 1} still shows login form, trying next...`);
-                                container.removeChild(iframe);
-                                tryWidgetUrls(container, urls, index + 1, widgetId);
-                                return;
-                            }
-                        }
-                        console.log(`Widget ${widgetId} successfully loaded without login form`);
-                    } catch (e) {
-                        // Cross-origin restriction, assume it worked
-                        console.log(`Widget ${widgetId} loaded (cross-origin)`);
+                    const loginForms = container.querySelectorAll('form input[type="password"]');
+                    if (loginForms.length > 0) {
+                        console.log(`URL ${index + 1} still shows login form, trying next...`);
+                        container.innerHTML = '';
+                        tryWidgetUrls(container, urls, index + 1, widgetId);
+                        return;
                     }
-                }, 2000);
+                    console.log(`Widget ${widgetId} successfully loaded without login form`);
+                }, 3000);
             };
             
-            iframe.onerror = () => {
+            script.onerror = () => {
                 console.log(`URL ${index + 1} failed to load for widget ${widgetId}, trying next...`);
-                container.removeChild(iframe);
+                container.innerHTML = '';
                 tryWidgetUrls(container, urls, index + 1, widgetId);
             };
             
             container.innerHTML = '';
-            container.appendChild(iframe);
+            container.appendChild(script);
         }
 
         function loadNormalWidgets() {
