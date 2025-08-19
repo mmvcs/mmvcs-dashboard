@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Sales Comparison</title>
+<style>
+body { margin: 0; padding: 0; font-family: Arial, sans-serif; }
+#container { width: 100%; height: 100vh; }
+.waiting { text-align: center; padding: 50px; color: #666; }
+</style>
+</head>
+<body>
+<div id="container">
+<div class="waiting">Waiting for authentication...</div>
+</div>
+
+<script>
+var container = document.getElementById('container');
+var loaded = false;
+
+function loadWidget() {
+    if (loaded) return;
+    loaded = true;
+    
+    container.innerHTML = '';
+    var script = document.createElement('script');
+    script.src = 'https://c0acv999.caspio.com/dp/01217000201cfed888f24342b18f/emb';
+    container.appendChild(script);
+    
+    setTimeout(fillForms, 3000);
+}
+
+function fillForms() {
+    var username = localStorage.getItem('mmvcs_user');
+    var password = localStorage.getItem('mmvcs_pass');
+    
+    if (!username || !password) return;
+    
+    var attempts = 0;
+    var interval = setInterval(function() {
+        attempts++;
+        var forms = document.querySelectorAll('form');
+        var filled = false;
+        
+        forms.forEach(function(form) {
+            var userField = form.querySelector('input[type="text"], input[name*="user"], input[name*="login"]');
+            var passField = form.querySelector('input[type="password"]');
+            var submitBtn = form.querySelector('input[type="submit"], button[type="submit"], button');
+            
+            if (userField && passField && !userField.value) {
+                userField.value = username;
+                passField.value = password;
+                
+                setTimeout(function() {
+                    if (submitBtn) submitBtn.click();
+                }, 500);
+                
+                filled = true;
+            }
+        });
+        
+        if (filled || attempts > 10) clearInterval(interval);
+    }, 2000);
+}
+
+// Check for credentials every 3 seconds
+setInterval(function() {
+    var username = localStorage.getItem('mmvcs_user');
+    if (username && !loaded) {
+        loadWidget();
+    }
+}, 3000);
+
+// Initial check
+setTimeout(function() {
+    var username = localStorage.getItem('mmvcs_user');
+    if (username) loadWidget();
+}, 1000);
+</script>
+</body>
+</html>
