@@ -15,7 +15,7 @@
         <main class="dashboard-main">
             <div class="widgets-grid" id="widgets-container">
                 <div class="widget-container full-width welcome-widget">
-                    <h3></h3>
+                    <h3>Welcome Dashboard</h3>
                     <div class="widget-frame" id="widget-0">
                         <div class="loading">Setting up authentication...</div>
                     </div>
@@ -81,12 +81,13 @@
         }
 
         document.addEventListener('DOMContentLoaded', () => {
+            const cacheVersion = Date.now(); // Force fresh loading
             const widgets = [
-                { id: 'widget-0', src: 'https://dashboard.mmvcs-sales.com/caspio-widget-wrapper.html?widget=01217000f2c3610f806e481a9264' },
-                { id: 'widget-1', src: 'https://dashboard.mmvcs-sales.com/sales-comparison-wrapper.html' },
-                { id: 'widget-2', src: 'https://dashboard.mmvcs-sales.com/caspio-widget-wrapper.html?widget=0121700013fadbf0a2db4aca8f73' },
-                { id: 'widget-3', src: 'https://dashboard.mmvcs-sales.com/caspio-widget-wrapper.html?widget=01217000564ddc00d2ab4c7aac4d' },
-                { id: 'widget-4', src: 'https://dashboard.mmvcs-sales.com/caspio-widget-wrapper.html?widget=01217000301880de360842d1adb1' }
+                { id: 'widget-0', src: `https://dashboard.mmvcs-sales.com/caspio-widget-wrapper.html?widget=01217000f2c3610f806e481a9264&v=${cacheVersion}` },
+                { id: 'widget-1', src: `https://dashboard.mmvcs-sales.com/sales-comparison-wrapper.html?v=${cacheVersion}` },
+                { id: 'widget-2', src: `https://dashboard.mmvcs-sales.com/caspio-widget-wrapper.html?widget=0121700013fadbf0a2db4aca8f73&v=${cacheVersion}` },
+                { id: 'widget-3', src: `https://dashboard.mmvcs-sales.com/caspio-widget-wrapper.html?widget=01217000564ddc00d2ab4c7aac4d&v=${cacheVersion}` },
+                { id: 'widget-4', src: `https://dashboard.mmvcs-sales.com/caspio-widget-wrapper.html?widget=01217000301880de360842d1adb1&v=${cacheVersion}` }
             ];
             
             // Load widgets with credentials already stored
