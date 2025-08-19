@@ -15,9 +15,9 @@
 function auth() {
   var u = document.getElementById('u').value;
   var p = document.getElementById('p').value;
-  document.getElementById('msg').innerHTML = 'Auth: ' + u;
+  document.getElementById('msg').innerHTML = 'Authenticating: ' + u;
   if (window.parent) {
-    window.parent.postMessage({type:'auth', user:u, pass:p}, '*');
+    window.parent.postMessage({type:'mmvcs_auth', username:u, password:p}, '*');
   }
 }
 </script>
