@@ -25,7 +25,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     
                     // Also trigger authentication for other Caspio widgets on the parent page
                     triggerParentAuthentication(username, password);
-                }, 5000);
+                }, 3000);
             }
         } catch (error) {
             console.error('Error processing authentication:', error);
