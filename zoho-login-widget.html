@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MMVCS Dashboard Login</title>
+    <style>
+        .mmvcs-login-widget {
+            max-width: 400px;
+            margin: 20px auto;
+            padding: 30px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .mmvcs-login-widget h3 {
+            text-align: center;
+            margin-bottom: 25px;
+            color: #333;
+            font-size: 24px;
+        }
+        
+        .mmvcs-form-group {
+            margin-bottom: 20px;
+        }
+        
+        .mmvcs-form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+            font-weight: 500;
+        }
+        
+        .mmvcs-form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            box-sizing: border-box;
+            transition: border-color 0.3s;
+        }
+        
+        .mmvcs-form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .mmvcs-login-btn {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        .mmvcs-login-btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        .mmvcs-login-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .mmvcs-error {
+            color: #e74c3c;
+            text-align: center;
+            margin-top: 15px;
+            padding: 10px;
+            background: #fdf2f2;
+            border-radius: 5px;
+            border: 1px solid #fecaca;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="mmvcs-login-widget">
+        <h3>Access MMVCS Dashboard</h3>
+        <form id="mmvcs-login-form">
+            <div class="mmvcs-form-group">
+                <label for="mmvcs-username">Username:</label>
+                <input type="text" id="mmvcs-username" name="username" required>
+            </div>
+            <div class="mmvcs-form-group">
+                <label for="mmvcs-password">Password:</label>
+                <input type="password" id="mmvcs-password" name="password" required>
+            </div>
+            <button type="submit" class="mmvcs-login-btn">Access Dashboard</button>
+        </form>
+        <div id="mmvcs-error" class="mmvcs-error"></div>
+    </div>
+
+    <script>
+        document.getElementById('mmvcs-login-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const username = document.getElementById('mmvcs-username').value.trim();
+            const password = document.getElementById('mmvcs-password').value.trim();
+            const errorDiv = document.getElementById('mmvcs-error');
+            const submitBtn = e.target.querySelector('.mmvcs-login-btn');
+            
+            // Hide any previous errors
+            errorDiv.style.display = 'none';
+            
+            if (!username || !password) {
+                errorDiv.textContent = 'Please enter both username and password';
+                errorDiv.style.display = 'block';
+                return;
+            }
+            
+            // Show loading state
+            const originalText = submitBtn.textContent;
+            submitBtn.textContent = 'Connecting...';
+            submitBtn.disabled = true;
+            
+            try {
+                // Encode credentials for URL (simple base64 encoding)
+                const credentials = btoa(username + ':' + password);
+                
+                // Redirect to dashboard with encoded credentials
+                window.location.href = `https://dashboard.mmvcs-sales.com?auth=${encodeURIComponent(credentials)}`;
+                
+            } catch (error) {
+                // Reset button state
+                submitBtn.textContent = originalText;
+                submitBtn.disabled = false;
+                
+                errorDiv.textContent = 'Connection error. Please try again.';
+                errorDiv.style.display = 'block';
+            }
+        });
+    </script>
+</body>
+</html>
