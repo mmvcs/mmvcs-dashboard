@@ -15,10 +15,30 @@
 function auth() {
   var u = document.getElementById('u').value;
   var p = document.getElementById('p').value;
-  document.getElementById('msg').innerHTML = 'Authenticating: ' + u;
-  if (window.parent) {
-    window.parent.postMessage({type:'mmvcs_auth', username:u, password:p}, '*');
+  document.getElementById('msg').innerHTML = 'Auth: ' + u;
+  
+  // Send to parent window (Zoho Connect page)
+  if (window.parent && window.parent !== window) {
+    window.parent.postMessage({type:'mmvcs_auth', username:u, password:p, source:'login'}, '*');
   }
+  
+  // Also try to send to top window
+  if (window.top && window.top !== window) {
+    window.top.postMessage({type:'mmvcs_auth', username:u, password:p, source:'login'}, '*');
+  }
+  
+  // Try to find other iframes and send directly
+  try {
+    var parentDoc = window.parent.document;
+    var iframes = parentDoc.querySelectorAll('iframe');
+    for (var i = 0; i < iframes.length; i++) {
+      if (iframes[i].contentWindow !== window) {
+        try {
+          iframes[i].contentWindow.postMessage({type:'mmvcs_auth', username:u, password:p, source:'login'}, '*');
+        } catch (e) {}
+      }
+    }
+  } catch (e) {}
 }
 </script>
 </body>

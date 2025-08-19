@@ -20,8 +20,10 @@ function updateStatus(message) {
 
 updateStatus('Waiting for login...');
 
-// Listen for authentication from login widget
+// Listen for authentication from login widget - multiple ways
 window.addEventListener('message', function(event) {
+    console.log('Handler received message:', event.data);
+    updateStatus('Received message: ' + (event.data ? event.data.type : 'none'));
     if (event.data && event.data.type === 'mmvcs_auth') {
         var username = event.data.username;
         var password = event.data.password;
@@ -130,8 +132,20 @@ function authenticateWidgets(username, password) {
     }
 }
 
+// Set up listeners for parent messages
+if (window.parent && window.parent !== window) {
+    window.parent.addEventListener('message', function(event) {
+        console.log('Handler received parent message:', event.data);
+        if (event.data && event.data.type === 'mmvcs_auth') {
+            // Re-broadcast this message to our own window
+            window.postMessage(event.data, '*');
+        }
+    });
+}
+
 // Request authentication from other widgets on load
 setTimeout(function() {
+    updateStatus('Listening for authentication...');
     if (window.parent && window.parent !== window) {
         window.parent.postMessage({
             type: 'request_auth',
