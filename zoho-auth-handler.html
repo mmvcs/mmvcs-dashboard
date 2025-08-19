@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Auth Handler</title>
+</head>
+<body style="margin:0;padding:10px;font-family:Arial,sans-serif;font-size:12px;">
+<div style="text-align:center;color:#666;">🔐 Authentication Handler</div>
+<div id="status" style="margin-top:5px;font-size:11px;color:#999;"></div>
+<script>
+console.log('MMVCS Authentication Handler loaded');
+
+var statusDiv = document.getElementById('status');
+var authCount = 0;
+
+function updateStatus(message) {
+    statusDiv.innerHTML = message;
+    console.log('Auth Handler:', message);
+}
+
+updateStatus('Waiting for login...');
+
+// Listen for authentication from login widget
+window.addEventListener('message', function(event) {
+    if (event.data && event.data.type === 'mmvcs_auth') {
+        var username = event.data.username;
+        var password = event.data.password;
+        
+        updateStatus('Received auth for: ' + username);
+        console.log('Received authentication for user:', username);
+        
+        // Try to find parent window (Zoho Connect page)
+        var targetWindow = window.parent;
+        if (targetWindow && targetWindow !== window) {
+            
+            // Send authentication to all widgets via parent
+            targetWindow.postMessage({
+                type: 'broadcast_auth',
+                username: username,
+                password: password,
+                source: 'auth_handler'
+            }, '*');
+            
+            updateStatus('Broadcasting to widgets...');
+            
+            // Try to find and authenticate iframes directly
+            setTimeout(function() {
+                authenticateWidgets(username, password);
+            }, 500);
+            
+        } else {
+            updateStatus('No parent window found');
+        }
+    }
+    
+    // Also listen for broadcast requests from other widgets
+    if (event.data && event.data.type === 'request_auth') {
+        // If we have stored credentials, send them
+        var storedUser = sessionStorage.getItem('mmvcs_user');
+        var storedPass = sessionStorage.getItem('mmvcs_pass');
+        if (storedUser && storedPass) {
+            event.source.postMessage({
+                type: 'mmvcs_auth',
+                username: storedUser,
+                password: storedPass
+            }, '*');
+            updateStatus('Sent stored auth to requesting widget');
+        }
+    }
+});
+
+function authenticateWidgets(username, password) {
+    // Store credentials for later requests
+    sessionStorage.setItem('mmvcs_user', username);
+    sessionStorage.setItem('mmvcs_pass', password);
+    
+    try {
+        // Try to access parent document to find other widgets
+        var parentDoc = window.parent.document;
+        var iframes = parentDoc.querySelectorAll('iframe');
+        
+        updateStatus('Found ' + iframes.length + ' widgets');
+        console.log('Found', iframes.length, 'iframes to authenticate');
+        
+        authCount = 0;
+        
+        for (var i = 0; i < iframes.length; i++) {
+            (function(iframe, index) {
+                // Skip our own iframes
+                if (iframe.contentWindow === window) {
+                    return;
+                }
+                
+                setTimeout(function() {
+                    try {
+                        // Send authentication to each widget
+                        iframe.contentWindow.postMessage({
+                            type: 'caspio_auth',
+                            username: username,
+                            password: password,
+                            source: 'auth_handler'
+                        }, '*');
+                        
+                        authCount++;
+                        updateStatus('Authenticated ' + authCount + ' widgets');
+                        console.log('Sent auth to iframe', index);
+                        
+                    } catch (e) {
+                        console.log('Could not send to iframe', index, ':', e.message);
+                    }
+                }, index * 300);
+                
+            })(iframes[i], i);
+        }
+        
+        setTimeout(function() {
+            updateStatus('Authentication complete ✓');
+        }, iframes.length * 300 + 1000);
+        
+    } catch (e) {
+        console.log('Cannot access parent document:', e.message);
+        updateStatus('Broadcasting via postMessage only');
+        
+        // Fallback: just broadcast via parent window
+        window.parent.postMessage({
+            type: 'authenticate_all',
+            username: username,
+            password: password
+        }, '*');
+    }
+}
+
+// Request authentication from other widgets on load
+setTimeout(function() {
+    if (window.parent && window.parent !== window) {
+        window.parent.postMessage({
+            type: 'request_auth',
+            source: 'auth_handler'
+        }, '*');
+    }
+}, 1000);
+</script>
+</body>
+</html>
