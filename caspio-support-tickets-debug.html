@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Support Tickets (Debug)</title>
+<style>
+body { margin: 0; padding: 0; font-family: Arial, sans-serif; }
+#debug-panel { 
+    position: fixed; 
+    top: 0; 
+    right: 0; 
+    width: 300px;
+    height: 100vh;
+    background: #f8f9fa; 
+    border-left: 2px solid #ccc;
+    padding: 10px;
+    overflow-y: auto;
+    font-size: 11px;
+    z-index: 1000;
+}
+#caspio-container { 
+    width: calc(100% - 320px); 
+    height: 100vh; 
+    float: left;
+}
+#debug-log {
+    background: white;
+    border: 1px solid #ddd;
+    padding: 8px;
+    height: 200px;
+    overflow-y: auto;
+    margin-top: 10px;
+    font-size: 10px;
+}
+</style>
+</head>
+<body>
+<div id="caspio-container">
+    <script type="text/javascript" src="https://c0acv999.caspio.com/dp/01217000b3314ae88b7949d3bc8d/emb"></script>
+</div>
+
+<div id="debug-panel">
+    <h4>Support Tickets Debug</h4>
+    <div id="auth-status">🔍 Starting debug...</div>
+    
+    <h5>Page Content Scan:</h5>
+    <div id="content-scan"></div>
+    
+    <h5>Forms Found:</h5>
+    <div id="forms-scan"></div>
+    
+    <h5>Debug Log:</h5>
+    <div id="debug-log"></div>
+</div>
+
+<script>
+var debugLog = [];
+
+function log(message) {
+    debugLog.push(new Date().toLocaleTimeString() + ': ' + message);
+    document.getElementById('debug-log').innerHTML = debugLog.slice(-20).join('<br>');
+    console.log('Support Tickets Debug:', message);
+}
+
+function updateStatus(message) {
+    document.getElementById('auth-status').innerHTML = message;
+    log(message);
+}
+
+function scanPageContent() {
+    var contentDiv = document.getElementById('content-scan');
+    var bodyText = document.body.innerText;
+    
+    // Look for key phrases
+    var indicators = [];
+    if (bodyText.toLowerCase().includes('login')) indicators.push('LOGIN text found');
+    if (bodyText.toLowerCase().includes('username')) indicators.push('USERNAME text found');
+    if (bodyText.toLowerCase().includes('password')) indicators.push('PASSWORD text found');
+    if (bodyText.toLowerCase().includes('sign in')) indicators.push('SIGN IN text found');
+    if (bodyText.toLowerCase().includes('authenticate')) indicators.push('AUTHENTICATE text found');
+    if (bodyText.toLowerCase().includes('access denied')) indicators.push('ACCESS DENIED found');
+    if (bodyText.toLowerCase().includes('error')) indicators.push('ERROR text found');
+    
+    contentDiv.innerHTML = indicators.length > 0 ? indicators.join('<br>') : 'No auth indicators found';
+    
+    // Also show first 200 chars of body text
+    contentDiv.innerHTML += '<hr><strong>First 200 chars:</strong><br>' + 
+                            bodyText.substring(0, 200) + '...';
+}
+
+function scanForms() {
+    var formsDiv = document.getElementById('forms-scan');
+    var forms = document.querySelectorAll('form');
+    var inputs = document.querySelectorAll('input');
+    
+    var formInfo = [];
+    formInfo.push('Total forms: ' + forms.length);
+    formInfo.push('Total inputs: ' + inputs.length);
+    
+    forms.forEach(function(form, index) {
+        var formInputs = form.querySelectorAll('input');
+        var inputTypes = [];
+        formInputs.forEach(function(input) {
+            inputTypes.push(input.type + (input.name ? '(name:' + input.name + ')' : ''));
+        });
+        formInfo.push('Form ' + index + ': ' + inputTypes.join(', '));
+    });
+    
+    inputs.forEach(function(input, index) {
+        if (index < 10) { // Show first 10 inputs
+            formInfo.push('Input ' + index + ': type=' + input.type + 
+                         ', name=' + (input.name || 'none') + 
+                         ', id=' + (input.id || 'none'));
+        }
+    });
+    
+    formsDiv.innerHTML = formInfo.join('<br>');
+}
+
+function checkForCredentials() {
+    var username = '';
+    var password = '';
+    var found = false;
+    
+    // Check localStorage
+    try {
+        var localUser = localStorage.getItem('mmvcs_user');
+        var localPass = localStorage.getItem('mmvcs_pass');
+        if (localUser && localPass) {
+            username = localUser;
+            password = localPass;
+            found = true;
+            updateStatus('🔐 Found credentials: ' + localUser);
+        }
+    } catch (e) {
+        log('localStorage check failed: ' + e.message);
+    }
+    
+    // Check sessionStorage
+    if (!found) {
+        try {
+            var sessionUser = sessionStorage.getItem('mmvcs_user');
+            var sessionPass = sessionStorage.getItem('mmvcs_pass');
+            if (sessionUser && sessionPass) {
+                username = sessionUser;
+                password = sessionPass;
+                found = true;
+                updateStatus('🔐 Found session credentials: ' + sessionUser);
+            }
+        } catch (e) {
+            log('sessionStorage check failed: ' + e.message);
+        }
+    }
+    
+    if (found) {
+        setTimeout(function() {
+            authenticateWidget(username, password);
+        }, 3000); // Wait longer for Caspio to fully load
+    } else {
+        updateStatus('⏳ No credentials found');
+    }
+    
+    return found;
+}
+
+function authenticateWidget(username, password) {
+    updateStatus('🔄 Starting authentication attempts...');
+    
+    var attempts = 0;
+    var maxAttempts = 5; // Reduced for debug
+    
+    var authInterval = setInterval(function() {
+        attempts++;
+        updateStatus('🔄 Debug attempt ' + attempts + '/5');
+        
+        // Scan page content and forms each attempt
+        scanPageContent();
+        scanForms();
+        
+        // Look for forms to authenticate
+        var forms = document.querySelectorAll('form');
+        var authenticated = false;
+        
+        log('Found ' + forms.length + ' forms in attempt ' + attempts);
+        
+        forms.forEach(function(form, index) {
+            log('Examining form ' + index);
+            
+            var allInputs = form.querySelectorAll('input');
+            log('Form ' + index + ' has ' + allInputs.length + ' inputs');
+            
+            // Try different field selectors
+            var usernameField = form.querySelector('input[type="text"]') || 
+                              form.querySelector('input[name*="user"]') || 
+                              form.querySelector('input[name*="login"]') ||
+                              form.querySelector('input[name*="email"]');
+                              
+            var passwordField = form.querySelector('input[type="password"]') || 
+                              form.querySelector('input[name*="pass"]');
+            
+            log('Form ' + index + ' - Username field: ' + (usernameField ? 'FOUND' : 'NOT FOUND'));
+            log('Form ' + index + ' - Password field: ' + (passwordField ? 'FOUND' : 'NOT FOUND'));
+            
+            if (usernameField && passwordField) {
+                log('ATTEMPTING TO FILL FORM ' + index);
+                
+                usernameField.value = username;
+                passwordField.value = password;
+                
+                // Trigger events
+                ['input', 'change', 'keyup', 'blur'].forEach(function(eventType) {
+                    usernameField.dispatchEvent(new Event(eventType, {bubbles: true}));
+                    passwordField.dispatchEvent(new Event(eventType, {bubbles: true}));
+                });
+                
+                var submitButton = form.querySelector('input[type="submit"], button[type="submit"], button');
+                log('Submit button: ' + (submitButton ? 'FOUND' : 'NOT FOUND'));
+                
+                if (submitButton) {
+                    setTimeout(function() {
+                        log('CLICKING SUBMIT BUTTON');
+                        submitButton.click();
+                    }, 500);
+                }
+                
+                authenticated = true;
+                updateStatus('✅ Filled form ' + index);
+            }
+        });
+        
+        if (attempts >= maxAttempts) {
+            clearInterval(authInterval);
+            updateStatus('⚠ Debug complete - check log');
+            log('Final scan - Total elements: ' + document.querySelectorAll('*').length);
+        }
+        
+    }, 3000); // Slower for debugging
+}
+
+// Start debugging
+setTimeout(function() {
+    log('Widget loaded, starting credential check');
+    scanPageContent();
+    scanForms();
+    
+    if (!checkForCredentials()) {
+        updateStatus('⏳ Waiting for credentials...');
+        setInterval(function() {
+            if (checkForCredentials()) {
+                // Found credentials, will start auth
+            } else {
+                // Still waiting, update scans
+                scanPageContent();
+                scanForms();
+            }
+        }, 5000);
+    }
+}, 2000);
+
+log('Support Tickets debug version loaded');
+</script>
+</body>
+</html>
