@@ -191,10 +191,15 @@ function sendToDashboard(username, password) {
     var credentials = btoa(username + ':' + password);
     var dashboardUrl = 'https://dashboard.mmvcs-sales.com?auth=' + encodeURIComponent(credentials);
     
+    console.log('Dashboard URL being opened:', dashboardUrl);
+    alert('Opening dashboard with URL: ' + dashboardUrl);
+    
     try {
         window.open(dashboardUrl, 'mmvcs_dashboard', 'width=1200,height=800,scrollbars=yes,resizable=yes');
+        console.log('Dashboard window opened successfully');
     } catch (e) {
-        console.log('Could not open dashboard window');
+        console.log('Could not open dashboard window:', e);
+        alert('Error opening dashboard: ' + e.message);
     }
     
     try {
