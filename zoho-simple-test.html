@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+</head>
+<body>
+<h3>MMVCS Login Test</h3>
+<form>
+<p>Username: <input type="text" id="u"></p>
+<p>Password: <input type="password" id="p"></p>
+<p><button type="button" onclick="auth()">Login</button></p>
+</form>
+<p id="msg"></p>
+<script>
+function auth() {
+  var u = document.getElementById('u').value;
+  var p = document.getElementById('p').value;
+  document.getElementById('msg').innerHTML = 'Auth: ' + u;
+  if (window.parent) {
+    window.parent.postMessage({type:'auth', user:u, pass:p}, '*');
+  }
+}
+</script>
+</body>
+</html>
