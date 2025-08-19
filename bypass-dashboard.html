@@ -217,46 +217,77 @@
             try {
                 console.log('Attempting to authenticate iframe:', iframe.src);
                 
-                setTimeout(() => {
-                    try {
-                        const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
-                        
-                        if (iframeDoc) {
-                            // Look for login form
-                            const usernameField = iframeDoc.querySelector('input[type="text"], input[name*="user"], input[name*="login"]');
-                            const passwordField = iframeDoc.querySelector('input[type="password"], input[name*="pass"]');
-                            const submitButton = iframeDoc.querySelector('input[type="submit"], button[type="submit"], button');
+                // Try multiple times with different delays to catch the form when it appears
+                const attemptTimes = [500, 1000, 1500, 2000, 2500, 3000];
+                
+                attemptTimes.forEach(delay => {
+                    setTimeout(() => {
+                        try {
+                            const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
                             
-                            if (usernameField && passwordField && submitButton) {
-                                console.log('Found login form, pre-authenticating...');
+                            if (iframeDoc) {
+                                // Look for login form
+                                const usernameField = iframeDoc.querySelector('input[type="text"], input[name*="user"], input[name*="login"]');
+                                const passwordField = iframeDoc.querySelector('input[type="password"], input[name*="pass"]');
+                                const submitButton = iframeDoc.querySelector('input[type="submit"], button[type="submit"], button');
                                 
-                                // Fill immediately
-                                usernameField.value = authUsername;
-                                passwordField.value = authPassword;
-                                
-                                // Trigger events
-                                ['input', 'change', 'keyup'].forEach(eventType => {
-                                    usernameField.dispatchEvent(new Event(eventType, { bubbles: true }));
-                                    passwordField.dispatchEvent(new Event(eventType, { bubbles: true }));
-                                });
-                                
-                                // Submit immediately
-                                setTimeout(() => {
-                                    submitButton.click();
-                                    console.log('Pre-authentication submitted');
-                                }, 100);
+                                if (usernameField && passwordField && submitButton) {
+                                    console.log(`Found login form at ${delay}ms, authenticating...`);
+                                    
+                                    // Fill the form
+                                    usernameField.value = authUsername;
+                                    passwordField.value = authPassword;
+                                    
+                                    // Trigger all possible events to make sure form recognizes the input
+                                    ['input', 'change', 'keyup', 'keydown', 'blur', 'focus'].forEach(eventType => {
+                                        usernameField.dispatchEvent(new Event(eventType, { bubbles: true }));
+                                        passwordField.dispatchEvent(new Event(eventType, { bubbles: true }));
+                                    });
+                                    
+                                    // Try multiple submission methods
+                                    setTimeout(() => {
+                                        // Method 1: Click the submit button
+                                        submitButton.click();
+                                        console.log('Clicked submit button');
+                                        
+                                        // Method 2: Submit the form directly
+                                        const form = usernameField.closest('form');
+                                        if (form) {
+                                            form.submit();
+                                            console.log('Submitted form directly');
+                                        }
+                                        
+                                        // Method 3: Trigger Enter key on password field
+                                        passwordField.dispatchEvent(new KeyboardEvent('keydown', {
+                                            key: 'Enter',
+                                            code: 'Enter',
+                                            which: 13,
+                                            keyCode: 13,
+                                            bubbles: true
+                                        }));
+                                        
+                                        // Method 4: Focus and click
+                                        passwordField.focus();
+                                        setTimeout(() => {
+                                            submitButton.focus();
+                                            submitButton.click();
+                                        }, 100);
+                                        
+                                        console.log('Multiple submission methods attempted');
+                                    }, 200);
+                                }
                             }
+                        } catch (crossOriginError) {
+                            // Send credentials via postMessage for cross-origin iframes
+                            iframe.contentWindow.postMessage({
+                                type: 'caspio_pre_auth',
+                                username: authUsername,
+                                password: authPassword
+                            }, '*');
+                            console.log('Sent pre-auth credentials via postMessage');
                         }
-                    } catch (crossOriginError) {
-                        // Send credentials via postMessage for cross-origin iframes
-                        iframe.contentWindow.postMessage({
-                            type: 'caspio_pre_auth',
-                            username: authUsername,
-                            password: authPassword
-                        }, '*');
-                        console.log('Sent pre-auth credentials via postMessage');
-                    }
-                }, 1000);
+                    }, delay);
+                });
             } catch (error) {
                 console.log('Error in iframe pre-authentication:', error);
             }
