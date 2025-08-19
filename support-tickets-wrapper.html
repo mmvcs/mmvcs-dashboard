@@ -67,6 +67,7 @@ function fillForms() {
 setInterval(function() {
     var username = localStorage.getItem('mmvcs_user');
     if (username && !loaded) {
+        console.log('Support tickets found credentials, loading widget');
         loadWidget();
     }
 }, 3000);
@@ -74,8 +75,21 @@ setInterval(function() {
 // Initial check
 setTimeout(function() {
     var username = localStorage.getItem('mmvcs_user');
-    if (username) loadWidget();
+    if (username) {
+        console.log('Support tickets found initial credentials');
+        loadWidget();
+    } else {
+        console.log('Support tickets waiting for credentials');
+    }
 }, 1000);
+
+// Force load after authentication message
+window.addEventListener('storage', function(e) {
+    if (e.key === 'mmvcs_user' && e.newValue && !loaded) {
+        console.log('Support tickets detected new credentials via storage event');
+        loadWidget();
+    }
+});
 </script>
 </body>
 </html>
