@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Welcome Dashboard</title>
+<style>
+body { margin: 0; padding: 0; font-family: Arial, sans-serif; }
+#container { width: 100%; height: 100vh; }
+.waiting { text-align: center; padding: 50px; color: #666; }
+</style>
+</head>
+<body>
+<div id="container">
+<div class="waiting">Waiting for authentication...</div>
+</div>
+
+<script>
+var container = document.getElementById('container');
+var loaded = false;
+
+function loadWidget() {
+    if (loaded) return;
+    loaded = true;
+    
+    console.log('Loading Welcome widget');
+    container.innerHTML = '';
+    var script = document.createElement('script');
+    script.src = 'https://c0acv999.caspio.com/dp/01217000f2c3610f806e481a9264/emb';
+    container.appendChild(script);
+    
+    setTimeout(fillForms, 2000);
+}
+
+function fillForms() {
+    var username = localStorage.getItem('mmvcs_user');
+    var password = localStorage.getItem('mmvcs_pass');
+    
+    if (!username || !password) {
+        console.log('No credentials found for Welcome widget');
+        return;
+    }
+    
+    var attempts = 0;
+    var maxAttempts = 25; // More attempts for Welcome widget
+    var interval = setInterval(function() {
+        attempts++;
+        var forms = document.querySelectorAll('form');
+        var filled = false;
+        
+        forms.forEach(function(form) {
+            var userField = form.querySelector('input[type="text"], input[name*="user"], input[name*="login"]');
+            var passField = form.querySelector('input[type="password"]');
+            var submitBtn = form.querySelector('input[type="submit"], button[type="submit"], button');
+            
+            if (userField && passField && !userField.value) {
+                console.log('Filling Welcome widget form, attempt:', attempts);
+                userField.value = username;
+                passField.value = password;
+                
+                // Trigger all possible events
+                ['input', 'change', 'keyup', 'keydown', 'blur', 'focus'].forEach(function(eventType) {
+                    userField.dispatchEvent(new Event(eventType, { bubbles: true }));
+                    passField.dispatchEvent(new Event(eventType, { bubbles: true }));
+                });
+                
+                // Multiple submission attempts
+                setTimeout(function() {
+                    if (submitBtn) {
+                        submitBtn.click();
+                        console.log('Submitted Welcome widget form');
+                        
+                        // Also try form.submit()
+                        setTimeout(function() {
+                            if (form) form.submit();
+                        }, 200);
+                        
+                        // And trigger Enter key
+                        setTimeout(function() {
+                            passField.dispatchEvent(new KeyboardEvent('keydown', {
+                                key: 'Enter', code: 'Enter', which: 13, keyCode: 13, bubbles: true
+                            }));
+                        }, 400);
+                    }
+                }, 200); // Faster submission
+                
+                filled = true;
+            }
+        });
+        
+        if (filled || attempts > maxAttempts) clearInterval(interval);
+    }, 1000); // Check more frequently
+}
+
+// Check for credentials very frequently
+var credentialCheck = setInterval(function() {
+    var username = localStorage.getItem('mmvcs_user');
+    if (username && !loaded) {
+        console.log('Welcome widget found credentials, loading');
+        clearInterval(credentialCheck);
+        loadWidget();
+    }
+}, 500); // Check every 500ms
+
+// Initial check
+setTimeout(function() {
+    var username = localStorage.getItem('mmvcs_user');
+    if (username) {
+        console.log('Welcome widget found initial credentials');
+        clearInterval(credentialCheck);
+        loadWidget();
+    } else {
+        console.log('Welcome widget waiting for credentials');
+    }
+}, 250); // Check very soon
+
+// Force load after authentication message
+window.addEventListener('storage', function(e) {
+    if (e.key === 'mmvcs_user' && e.newValue && !loaded) {
+        console.log('Welcome widget detected new credentials via storage event');
+        clearInterval(credentialCheck);
+        loadWidget();
+    }
+});
+</script>
+</body>
+</html>
