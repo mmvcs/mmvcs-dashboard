@@ -3,107 +3,59 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>MMV | Sales Dashboard</title>
-  <meta name="description" content="Consolidated sales insights for MMV Travel Group advisors." />
+  <title>MMV | Zoho Dashboard Sign-In</title>
+  <meta name="description" content="Single sign-on gateway for MMV Caspio dashboards inside Zoho Connect." />
   <style>
-    :root { --bg:#0b1020; --card:#0f152c; --ink:#e7ecf7; --muted:#a7b8dc; --line:#233052; --brand:#3b82f6; }
+    :root { --bg:#0b1020; --card:#121932; --ink:#e7ecf7; --muted:#9fb0d4; --brand:#3b82f6; --brand-ink:#dbeafe; }
     * { box-sizing: border-box; }
-    html, body { height: 100%; }
     body {
-      margin: 0; min-height: 100vh; background: linear-gradient(160deg,#0b1020 0,#0b1020 40%,#0a122a 100%);
-      color: var(--ink); font: 14px/1.5 system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial,"Noto Sans";
-      display:flex; flex-direction:column;
+      margin: 0; min-height: 100vh; display: grid; place-items: center;
+      background: radial-gradient(1000px 600px at 10% 0%, #101838 0, #0b1020 50%, #070a16 100%);
+      color: var(--ink); font: 16px/1.4 system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans";
     }
-    header { position: sticky; top: 0; z-index: 10; background: rgba(10,16,32,.7); backdrop-filter: blur(6px); border-bottom: 1px solid var(--line); }
-    .bar { display:flex; align-items:center; gap:12px; padding: 10px 16px; }
-    .brand { display:flex; align-items:center; gap:10px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:#dbeafe; font-size:12px; }
-    .brand .dot { width:10px;height:10px;border-radius:50%;background:var(--brand);box-shadow:0 0 0 6px rgba(59,130,246,.18); }
-    .spacer { flex:1; }
-    .lnk { color:#c7d7ff; text-decoration:none; font-weight:600; padding:8px 10px; border-radius:10px; }
-    .lnk:hover { background: rgba(59,130,246,.15); }
-    main { padding: 16px; max-width: 1400px; width: 100%; margin: 0 auto; flex:1; }
-    .grid { display: grid; gap: 16px; grid-template-columns: repeat(12, 1fr); }
-    .card { background: var(--card); border: 1px solid var(--line); border-radius: 16px; overflow: hidden; box-shadow: 0 12px 24px rgba(0,0,0,.25); }
-    .title { padding: 10px 12px; border-bottom: 1px solid var(--line); font-weight: 700; color:#cfe1ff; }
-    iframe { display:block; width:100%; height: 420px; border:0; background:#0a122a; }
-    .welcome { grid-column: 1 / -1; }
-    .col { grid-column: span 6; }
-    @media (max-width: 980px) { .col { grid-column: 1 / -1; } iframe { height: 420px; } }
+    .shell { width: min(720px, 92vw); padding: 28px; }
+    .card { background: var(--card); border: 1px solid #263255; border-radius: 18px; padding: 28px; box-shadow: 0 12px 40px rgba(0,0,0,.35); }
+    h1 { margin: 0 0 6px; font-size: clamp(22px, 4vw, 28px); }
+    p.lead { margin: 0 0 18px; color: var(--muted); }
+    .btn {
+      display:inline-flex; gap:10px; align-items:center; justify-content:center;
+      padding:14px 18px; border-radius:12px; text-decoration:none; font-weight:600;
+      background: var(--brand); color:#06122b; box-shadow: 0 10px 24px rgba(59,130,246,.35);
+      transition: filter .15s ease;
+    }
+    .btn:hover { filter: brightness(1.06); }
+    .hint { margin-top: 14px; font-size: 13px; color: var(--muted); }
+    .footer { margin-top: 22px; font-size: 12px; color: var(--muted); opacity: .9; }
+    .logo { display:inline-flex; align-items:center; gap:10px; margin-bottom: 10px; color: var(--brand-ink); text-transform: uppercase; letter-spacing: .12em; font-weight: 700; font-size: 12px; }
+    .logo .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--brand); box-shadow: 0 0 0 6px rgba(59,130,246,.15); }
+    .list { margin: 14px 0 0; padding-left: 18px; color: var(--muted); }
   </style>
 </head>
 <body>
-  <header>
-    <div class="bar">
-      <div class="brand"><span class="dot"></span> MMV Travel Group</div>
-      <div class="spacer"></div>
-      <a class="lnk" href="/login">Switch account</a>
-      <a class="lnk" href="/auth/hard-logout">Sign out</a>
+  <div class="shell">
+    <div class="card">
+      <div class="logo"><span class="dot"></span> MMV Travel Group</div>
+      <h1>Sign in to view your Sales Dashboard</h1>
+      <p class="lead">One secure login powers all widgets—no separate sign-ins.</p>
+
+      <!-- Opens the sandboxed Gate on your Worker (hosts the Caspio login safely) -->
+      <p>
+        <a class="btn" target="_blank" rel="noopener"
+           href="https://mmv-dashboard-proxy.jeff-4b0.workers.dev/gate?dp=01217000f2c3610f806e481a9264&dest=https%3A%2F%2Fdashboard.mmvcs-sales.com%2Fauth%2Ffinish%3Fopen%3D1">
+          Continue to sign in
+        </a>
+      </p>
+
+      <ul class="list">
+        <li>Opens a secure sign-in in a new tab.</li>
+        <li>After you log in, you’ll be brought back to your dashboard automatically.</li>
+      </ul>
+
+      <div class="hint">If a popup blocker stops the new tab, allow popups for this site and click again.</div>
+      <div class="footer">
+        Trouble? Clear session: <a href="/auth/hard-logout" style="color:var(--brand-ink)">sign out</a> and try again.
+      </div>
     </div>
-  </header>
-
-  <main>
-    <div class="grid">
-      <!-- Welcome (full width) -->
-      <section class="card welcome">
-        <div class="title">Welcome</div>
-        <iframe
-          src="https://mmv-dashboard-proxy.jeff-4b0.workers.dev/dp/01217000f2c3610f806e481a9264"
-          title="Welcome Module"
-          loading="eager"
-          referrerpolicy="no-referrer">
-        </iframe>
-      </section>
-
-      <!-- Sales Comparison -->
-      <section class="card col">
-        <div class="title">Sales Comparison</div>
-        <iframe
-          src="https://mmv-dashboard-proxy.jeff-4b0.workers.dev/dp/01217000201cfed888f24342b18f"
-          title="Sales Comparison"
-          loading="lazy"
-          referrerpolicy="no-referrer">
-        </iframe>
-      </section>
-
-      <!-- Sales Chart -->
-      <section class="card col">
-        <div class="title">Sales Chart</div>
-        <iframe
-          src="https://mmv-dashboard-proxy.jeff-4b0.workers.dev/dp/0121700013fadbf0a2db4aca8f73"
-          title="Sales Chart"
-          loading="lazy"
-          referrerpolicy="no-referrer">
-        </iframe>
-      </section>
-
-      <!-- Destination Mix (Current) -->
-      <section class="card col">
-        <div class="title">Destination Mix — Current</div>
-        <iframe
-          src="https://mmv-dashboard-proxy.jeff-4b0.workers.dev/dp/01217000564ddc00d2ab4c7aac4d"
-          title="Destination Mix — Current"
-          loading="lazy"
-          referrerpolicy="no-referrer">
-        </iframe>
-      </section>
-
-      <!-- Destination Mix (Last Year) -->
-      <section class="card col">
-        <div class="title">Destination Mix — Last Year</div>
-        <iframe
-          src="https://mmv-dashboard-proxy.jeff-4b0.workers.dev/dp/01217000301880de360842d1adb1"
-          title="Destination Mix — Last Year"
-          loading="lazy"
-          referrerpolicy="no-referrer">
-        </iframe>
-      </section>
-    </div>
-  </main>
-
-  <noscript>
-    <div style="position:fixed;inset:0;display:grid;place-items:center;background:#0008;color:#fff">
-      JavaScript is required to render the dashboard.
-    </div>
-  </noscript>
+  </div>
 </body>
 </html>
