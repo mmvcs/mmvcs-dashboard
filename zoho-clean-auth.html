@@ -192,7 +192,7 @@ function sendToDashboard(username, password) {
     var dashboardUrl = 'https://dashboard.mmvcs-sales.com/direct-dashboard.html?auth=' + encodeURIComponent(credentials);
     
     try {
-        window.open(dashboardUrl, 'mmvcs_dashboard', 'width=1200,height=800,scrollbars=yes,resizable=yes');
+        window.open(dashboardUrl, '_blank');
     } catch (e) {
         console.log('Could not open dashboard window:', e);
     }
