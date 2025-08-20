@@ -22,45 +22,59 @@ function loadWidget() {
     if (loaded) return;
     loaded = true;
     
-    container.innerHTML = '';
-    var script = document.createElement('script');
-    script.src = 'https://c0acv999.caspio.com/dp/01217000301880de360842d1adb1/emb';
-    container.appendChild(script);
-    
-    setTimeout(fillForms, 3000);
+    container.innerHTML = `
+        <iframe src="https://c0acv999.caspio.com/dp/01217000301880de360842d1adb1/emb" 
+                width="100%" height="100%" frameborder="0" scrolling="auto"
+                onload="authenticateIframe(this)">
+        </iframe>
+    `;
 }
 
-function fillForms() {
+function authenticateIframe(iframe) {
     var username = localStorage.getItem('mmvcs_user');
     var password = localStorage.getItem('mmvcs_pass');
     
     if (!username || !password) return;
     
-    var attempts = 0;
-    var interval = setInterval(function() {
-        attempts++;
-        var forms = document.querySelectorAll('form');
-        var filled = false;
-        
-        forms.forEach(function(form) {
-            var userField = form.querySelector('input[type="text"], input[name*="user"], input[name*="login"]');
-            var passField = form.querySelector('input[type="password"]');
-            var submitBtn = form.querySelector('input[type="submit"], button[type="submit"], button');
+    setTimeout(function() {
+        try {
+            var iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+            var attempts = 0;
             
-            if (userField && passField && !userField.value) {
-                userField.value = username;
-                passField.value = password;
+            var interval = setInterval(function() {
+                attempts++;
+                var forms = iframeDoc.querySelectorAll('form');
+                var filled = false;
                 
-                setTimeout(function() {
-                    if (submitBtn) submitBtn.click();
-                }, 500);
+                forms.forEach(function(form) {
+                    var userField = form.querySelector('input[type="text"], input[name*="user"], input[name*="login"]');
+                    var passField = form.querySelector('input[type="password"]');
+                    var submitBtn = form.querySelector('input[type="submit"], button[type="submit"], button');
+                    
+                    if (userField && passField && !userField.value) {
+                        userField.value = username;
+                        passField.value = password;
+                        
+                        setTimeout(function() {
+                            if (submitBtn) submitBtn.click();
+                        }, 500);
+                        
+                        filled = true;
+                    }
+                });
                 
-                filled = true;
-            }
-        });
-        
-        if (filled || attempts > 10) clearInterval(interval);
-    }, 2000);
+                if (filled || attempts > 10) clearInterval(interval);
+            }, 2000);
+        } catch (e) {
+            console.log('Cross-origin iframe access blocked, using postMessage approach');
+            // Fallback to postMessage if direct access is blocked
+            iframe.contentWindow.postMessage({
+                type: 'mmvcs_auth',
+                username: username,
+                password: password
+            }, '*');
+        }
+    }, 3000);
 }
 
 // Check for credentials every 3 seconds
