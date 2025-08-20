@@ -15,37 +15,42 @@
         <main class="dashboard-main">
             <div class="widgets-grid">
                 <div class="widget-container full-width welcome-widget">
-                    <h3></h3>
+                    <h3>Welcome Dashboard</h3>
                     <div class="widget-frame">
-                        <script type="text/javascript" src="https://c0acv999.caspio.com/dp/01217000f2c3610f806e481a9264/emb"></script>
+                        <iframe src="https://dashboard.mmvcs-sales.com/welcome-wrapper.html" 
+                                width="100%" height="600" frameborder="0" scrolling="auto"></iframe>
                     </div>
                 </div>
 
                 <div class="widget-container full-width">
                     <h3>Sales Comparison This Year vs. Last Year</h3>
                     <div class="widget-frame">
-                        <script type="text/javascript" src="https://c0acv999.caspio.com/dp/01217000201cfed888f24342b18f/emb"></script>
+                        <iframe src="https://dashboard.mmvcs-sales.com/sales-comparison-wrapper.html" 
+                                width="100%" height="600" frameborder="0" scrolling="auto"></iframe>
                     </div>
                 </div>
 
                 <div class="widget-container full-width">
                     <h3>Sales Chart by Month</h3>
                     <div class="widget-frame">
-                        <script type="text/javascript" src="https://c0acv999.caspio.com/dp/0121700013fadbf0a2db4aca8f73/emb"></script>
+                        <iframe src="https://dashboard.mmvcs-sales.com/sales-chart-wrapper.html" 
+                                width="100%" height="600" frameborder="0" scrolling="auto"></iframe>
                     </div>
                 </div>
 
                 <div class="widget-container">
                     <h3>Destination Mix - Current Year</h3>
                     <div class="widget-frame">
-                        <script type="text/javascript" src="https://c0acv999.caspio.com/dp/01217000564ddc00d2ab4c7aac4d/emb"></script>
+                        <iframe src="https://dashboard.mmvcs-sales.com/destination-current-wrapper.html" 
+                                width="100%" height="600" frameborder="0" scrolling="auto"></iframe>
                     </div>
                 </div>
 
                 <div class="widget-container">
                     <h3>Destination Mix - Last Year</h3>
                     <div class="widget-frame">
-                        <script type="text/javascript" src="https://c0acv999.caspio.com/dp/01217000301880de360842d1adb1/emb"></script>
+                        <iframe src="https://dashboard.mmvcs-sales.com/destination-last-wrapper.html" 
+                                width="100%" height="600" frameborder="0" scrolling="auto"></iframe>
                     </div>
                 </div>
             </div>
@@ -53,7 +58,7 @@
     </div>
 
     <script>
-// Dashboard Auto-Authentication from URL Parameters - Inlined to avoid CSP issues
+// Store credentials for wrapper widgets
 document.addEventListener('DOMContentLoaded', () => {
     // Check for authentication credentials in URL
     const urlParams = new URLSearchParams(window.location.search);
@@ -66,31 +71,19 @@ document.addEventListener('DOMContentLoaded', () => {
             const [username, password] = decoded.split(':');
             
             if (username && password) {
-                // Store credentials for widget authentication
+                // Store credentials for wrapper widgets to use
+                localStorage.setItem('mmvcs_user', username);
+                localStorage.setItem('mmvcs_pass', password);
                 sessionStorage.setItem('mmvcs_user', username);
-                sessionStorage.setItem('mmvcs_password', password);
-                sessionStorage.setItem('auto_auth', 'true');
+                sessionStorage.setItem('mmvcs_pass', password);
                 
                 // Clean URL to remove credentials
                 window.history.replaceState({}, document.title, window.location.pathname);
                 
-                console.log('Starting auto-authentication with:', username);
+                console.log('Credentials stored for wrapper widgets:', username);
                 
-                // Start authentication immediately and repeatedly
-                autoAuthenticateAllWidgets(username, password);
-                
-                // Also try after widgets load
-                setTimeout(() => {
-                    autoAuthenticateAllWidgets(username, password);
-                }, 500);
-                
-                setTimeout(() => {
-                    autoAuthenticateAllWidgets(username, password);
-                }, 1500);
-                
-                setTimeout(() => {
-                    autoAuthenticateAllWidgets(username, password);
-                }, 3000);
+                // Show success message
+                showSuccessMessage();
             }
         } catch (error) {
             console.error('Error processing authentication:', error);
@@ -98,152 +91,26 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-function autoAuthenticateAllWidgets(username, password) {
-    console.log('AUTO-AUTH: Starting with username:', username);
+function showSuccessMessage() {
+    const statusDiv = document.createElement('div');
+    statusDiv.style.cssText = `
+        position: fixed; top: 20px; right: 20px; background: #27ae60; color: white; 
+        padding: 15px; border-radius: 5px; z-index: 10000; max-width: 300px;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    `;
+    statusDiv.innerHTML = `
+        ✅ <strong>Dashboard Loaded</strong><br>
+        Using wrapper widgets for authentication
+        <button onclick="this.parentElement.remove()" style="float: right; background: none; border: none; color: white; cursor: pointer; font-size: 16px;">×</button>
+    `;
+    document.body.appendChild(statusDiv);
     
-    // Find all Caspio widgets
-    const widgets = document.querySelectorAll('.widget-frame');
-    console.log('AUTO-AUTH: Found', widgets.length, 'widgets');
-    
-    let authAttempts = 0;
-    const maxAttempts = 20; // Try for longer
-    
-    const attemptAuth = () => {
-        let authenticatedCount = 0;
-        
-        widgets.forEach((widget, index) => {
-            // Look for iframes within each widget
-            const iframe = widget.querySelector('iframe');
-            const forms = widget.querySelectorAll('form');
-            
-            if (iframe) {
-                console.log('AUTO-AUTH: Found iframe in widget', index);
-                authenticateIframe(iframe, username, password);
-                authenticatedCount++;
-            }
-            
-            if (forms.length > 0) {
-                console.log('AUTO-AUTH: Found', forms.length, 'forms in widget', index);
-                forms.forEach(form => {
-                    authenticateForm(form, username, password);
-                    authenticatedCount++;
-                });
-            }
-        });
-        
-        authAttempts++;
-        
-        // Keep trying until we find widgets to authenticate or max attempts
-        if (authenticatedCount === 0 && authAttempts < maxAttempts) {
-            setTimeout(attemptAuth, 1000);
+    setTimeout(() => {
+        if (document.body.contains(statusDiv)) {
+            document.body.removeChild(statusDiv);
         }
-    };
-    
-    attemptAuth();
+    }, 8000);
 }
-
-function authenticateIframe(iframe, username, password) {
-    try {
-        setTimeout(() => {
-            try {
-                const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
-                
-                // Look for login form in iframe
-                const usernameField = iframeDoc.querySelector('input[type="text"], input[name*="user"], input[name*="login"]');
-                const passwordField = iframeDoc.querySelector('input[type="password"], input[name*="pass"]');
-                const submitButton = iframeDoc.querySelector('input[type="submit"], button[type="submit"], button');
-                
-                if (usernameField && passwordField && submitButton) {
-                    console.log('AUTO-AUTH: Found login form in iframe, filling...');
-                    
-                    // Fill credentials
-                    usernameField.value = username;
-                    passwordField.value = password;
-                    
-                    // Trigger events to ensure form recognizes the values
-                    ['input', 'change', 'keyup', 'blur'].forEach(eventType => {
-                        usernameField.dispatchEvent(new Event(eventType, { bubbles: true }));
-                        passwordField.dispatchEvent(new Event(eventType, { bubbles: true }));
-                    });
-                    
-                    // Wait a moment then submit
-                    setTimeout(() => {
-                        submitButton.click();
-                        console.log('AUTO-AUTH: Submitted iframe form');
-                    }, 1000);
-                }
-            } catch (crossOriginError) {
-                // Try postMessage for cross-origin iframes
-                iframe.contentWindow.postMessage({
-                    type: 'caspio_auto_auth',
-                    username: username,
-                    password: password
-                }, '*');
-                
-                console.log('AUTO-AUTH: Sent postMessage to cross-origin iframe');
-            }
-        }, 500);
-    } catch (error) {
-        console.log('Error authenticating iframe:', error);
-    }
-}
-
-function authenticateForm(form, username, password) {
-    try {
-        // Look for login form fields
-        const usernameField = form.querySelector('input[type="text"], input[name*="user"], input[name*="login"]');
-        const passwordField = form.querySelector('input[type="password"], input[name*="pass"]');
-        const submitButton = form.querySelector('input[type="submit"], button[type="submit"], button');
-        
-        if (usernameField && passwordField && submitButton) {
-            console.log('AUTO-AUTH: Found login form, filling...');
-            
-            // Fill credentials
-            usernameField.value = username;
-            passwordField.value = password;
-            
-            // Trigger events
-            ['input', 'change', 'keyup', 'blur'].forEach(eventType => {
-                usernameField.dispatchEvent(new Event(eventType, { bubbles: true }));
-                passwordField.dispatchEvent(new Event(eventType, { bubbles: true }));
-            });
-            
-            // Wait then submit
-            setTimeout(() => {
-                submitButton.click();
-                console.log('AUTO-AUTH: Submitted form');
-            }, 1000);
-        }
-    } catch (error) {
-        console.log('Error authenticating form:', error);
-    }
-}
-
-// Show authentication status after processing
-setTimeout(() => {
-    if (sessionStorage.getItem('auto_auth') === 'true') {
-        const statusDiv = document.createElement('div');
-        statusDiv.style.cssText = `
-            position: fixed; top: 20px; right: 20px; background: #27ae60; color: white; 
-            padding: 15px; border-radius: 5px; z-index: 10000; max-width: 300px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-        `;
-        statusDiv.innerHTML = `
-            ✅ <strong>Auto-authenticated</strong><br>
-            Credentials applied to all widgets
-            <button onclick="this.parentElement.remove()" style="float: right; background: none; border: none; color: white; cursor: pointer; font-size: 16px;">×</button>
-        `;
-        document.body.appendChild(statusDiv);
-        
-        setTimeout(() => {
-            if (document.body.contains(statusDiv)) {
-                document.body.removeChild(statusDiv);
-            }
-        }, 5000);
-        
-        sessionStorage.removeItem('auto_auth');
-    }
-}, 2000);
     </script>
 </body>
 </html>
