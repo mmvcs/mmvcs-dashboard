@@ -11,14 +11,10 @@
     html, body { height: 100%; }
     body {
       margin: 0; min-height: 100vh; background: linear-gradient(160deg,#0b1020 0,#0b1020 40%,#0a122a 100%);
-      color: var(--ink); font: 14px/1.5 system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial,"Noto Sans","Apple Color Emoji","Segoe UI Emoji";
+      color: var(--ink); font: 14px/1.5 system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial,"Noto Sans";
       display:flex; flex-direction:column;
     }
-    header {
-      position: sticky; top: 0; z-index: 10;
-      background: rgba(10,16,32,.7); backdrop-filter: blur(6px);
-      border-bottom: 1px solid var(--line);
-    }
+    header { position: sticky; top: 0; z-index: 10; background: rgba(10,16,32,.7); backdrop-filter: blur(6px); border-bottom: 1px solid var(--line); }
     .bar { display:flex; align-items:center; gap:12px; padding: 10px 16px; }
     .brand { display:flex; align-items:center; gap:10px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:#dbeafe; font-size:12px; }
     .brand .dot { width:10px;height:10px;border-radius:50%;background:var(--brand);box-shadow:0 0 0 6px rgba(59,130,246,.18); }
@@ -26,25 +22,13 @@
     .lnk { color:#c7d7ff; text-decoration:none; font-weight:600; padding:8px 10px; border-radius:10px; }
     .lnk:hover { background: rgba(59,130,246,.15); }
     main { padding: 16px; max-width: 1400px; width: 100%; margin: 0 auto; flex:1; }
-    .grid {
-      display: grid; gap: 16px;
-      grid-template-columns: repeat(12, 1fr);
-    }
-    .card {
-      background: var(--card); border: 1px solid var(--line); border-radius: 16px; overflow: hidden;
-      box-shadow: 0 12px 24px rgba(0,0,0,.25);
-    }
+    .grid { display: grid; gap: 16px; grid-template-columns: repeat(12, 1fr); }
+    .card { background: var(--card); border: 1px solid var(--line); border-radius: 16px; overflow: hidden; box-shadow: 0 12px 24px rgba(0,0,0,.25); }
     .title { padding: 10px 12px; border-bottom: 1px solid var(--line); font-weight: 700; color:#cfe1ff; }
-    iframe {
-      display:block; width:100%; height: 420px; border:0; background:#0a122a;
-    }
-    /* Layout: Welcome spans full width; others in two columns on desktop */
+    iframe { display:block; width:100%; height: 420px; border:0; background:#0a122a; }
     .welcome { grid-column: 1 / -1; }
     .col { grid-column: span 6; }
-    @media (max-width: 980px) {
-      .col { grid-column: 1 / -1; }
-      iframe { height: 420px; }
-    }
+    @media (max-width: 980px) { .col { grid-column: 1 / -1; } iframe { height: 420px; } }
   </style>
 </head>
 <body>
@@ -63,7 +47,7 @@
       <section class="card welcome">
         <div class="title">Welcome</div>
         <iframe
-          src="https://caspio.mmvcs-sales.com/dp/01217000f2c3610f806e481a9264"
+          src="https://mmv-dashboard-proxy.jeff-4b0.workers.dev/dp/01217000f2c3610f806e481a9264"
           title="Welcome Module"
           loading="eager"
           referrerpolicy="no-referrer">
@@ -74,7 +58,7 @@
       <section class="card col">
         <div class="title">Sales Comparison</div>
         <iframe
-          src="https://caspio.mmvcs-sales.com/dp/01217000201cfed888f24342b18f"
+          src="https://mmv-dashboard-proxy.jeff-4b0.workers.dev/dp/01217000201cfed888f24342b18f"
           title="Sales Comparison"
           loading="lazy"
           referrerpolicy="no-referrer">
@@ -85,7 +69,7 @@
       <section class="card col">
         <div class="title">Sales Chart</div>
         <iframe
-          src="https://caspio.mmvcs-sales.com/dp/0121700013fadbf0a2db4aca8f73"
+          src="https://mmv-dashboard-proxy.jeff-4b0.workers.dev/dp/0121700013fadbf0a2db4aca8f73"
           title="Sales Chart"
           loading="lazy"
           referrerpolicy="no-referrer">
@@ -96,7 +80,7 @@
       <section class="card col">
         <div class="title">Destination Mix — Current</div>
         <iframe
-          src="https://caspio.mmvcs-sales.com/dp/01217000564ddc00d2ab4c7aac4d"
+          src="https://mmv-dashboard-proxy.jeff-4b0.workers.dev/dp/01217000564ddc00d2ab4c7aac4d"
           title="Destination Mix — Current"
           loading="lazy"
           referrerpolicy="no-referrer">
@@ -107,7 +91,7 @@
       <section class="card col">
         <div class="title">Destination Mix — Last Year</div>
         <iframe
-          src="https://caspio.mmvcs-sales.com/dp/01217000301880de360842d1adb1"
+          src="https://mmv-dashboard-proxy.jeff-4b0.workers.dev/dp/01217000301880de360842d1adb1"
           title="Destination Mix — Last Year"
           loading="lazy"
           referrerpolicy="no-referrer">
