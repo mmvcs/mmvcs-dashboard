@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Sign in · MMV Dashboard</title>
+<style>
+body{font-family:ui-sans-serif,system-ui,Segoe UI,Roboto,Helvetica,Arial;display:grid;place-items:center;min-height:100vh;margin:0;background:#0b1020;color:#e7ecf7}
+.card{background:#121932;border:1px solid #263255;border-radius:18px;padding:28px;max-width:560px;width:92%;box-shadow:0 10px 30px rgba(0,0,0,.3)}
+h1{font-size:1.5rem;margin:0 0 12px}
+p{opacity:.9;line-height:1.5}
+.actions{display:flex;gap:12px;margin-top:14px}
+a.btn{display:inline-block;padding:12px 16px;border-radius:12px;background:#3b82f6;color:#fff;text-decoration:none;font-weight:600}
+a.secondary{background:#263255}
+.note{font-size:.9rem;opacity:.8;margin-top:8px}
+</style>
+</head>
+<body>
+<div class="card">
+<h1>Sign in to view your sales dashboards</h1>
+<p>
+You’ll be redirected to our secure Caspio sign-in. After login, you’ll come back here automatically.
+</p>
+<div class="actions">
+<!-- Use the Welcome Dashboard dp as the login entry point via the proxy -->
+<a class="btn" href="/caspio/dp/01217000f2c3610f806e481a9264?dest=%2Fdashboard">Continue to sign in</a>
+<a class="btn secondary" href="/dashboard">Skip</a>
+</div>
+<div class="note">Tip: If you’re already signed in, the dashboard will load immediately.</div>
+</div>
+</body>
+</html>
