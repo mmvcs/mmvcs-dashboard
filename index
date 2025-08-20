@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>MMV Dashboard</title>
+<style>
+body{font-family:ui-sans-serif,system-ui,Segoe UI,Roboto,Helvetica,Arial;display:grid;place-items:center;height:100vh;margin:0;background:#0b1020;color:#e7ecf7}
+.card{background:#121932;border:1px solid #263255;border-radius:18px;padding:28px;max-width:520px;box-shadow:0 10px 30px rgba(0,0,0,.3)}
+h1{font-size:1.4rem;margin:0 0 8px}
+p{opacity:.85;line-height:1.45}
+a.btn{display:inline-block;margin-top:14px;padding:12px 16px;border-radius:12px;background:#3b82f6;color:#fff;text-decoration:none;font-weight:600}
+</style>
+<script>
+// Minimal redirector: send users to dashboard; if not signed in, the Worker will bounce them to /login
+location.replace('/dashboard');
+</script>
+</head>
+<body>
+<div class="card">
+<h1>Loading the MMV Dashboard…</h1>
+<p>If this doesn’t load, <a class="btn" href="/dashboard">continue to dashboard</a>.</p>
+</div>
+</body>
+</html>
