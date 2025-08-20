@@ -34,47 +34,64 @@ function authenticateIframe(iframe) {
     var username = localStorage.getItem('mmvcs_user');
     var password = localStorage.getItem('mmvcs_pass');
     
-    if (!username || !password) return;
+    if (!username || !password) {
+        console.log('No credentials found in localStorage');
+        return;
+    }
     
-    setTimeout(function() {
-        try {
-            var iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
-            var attempts = 0;
-            
-            var interval = setInterval(function() {
-                attempts++;
-                var forms = iframeDoc.querySelectorAll('form');
-                var filled = false;
+    console.log('Starting authentication for iframe with user:', username);
+    
+    // Try multiple times with different delays
+    var delays = [1000, 2000, 3000, 5000];
+    
+    delays.forEach(function(delay) {
+        setTimeout(function() {
+            try {
+                var iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                console.log('Trying iframe authentication at delay:', delay);
                 
-                forms.forEach(function(form) {
-                    var userField = form.querySelector('input[type="text"], input[name*="user"], input[name*="login"]');
+                var forms = iframeDoc.querySelectorAll('form');
+                console.log('Found', forms.length, 'forms in iframe');
+                
+                forms.forEach(function(form, index) {
+                    var userField = form.querySelector('input[type="text"], input[name*="user"], input[name*="login"], input[placeholder*="user"], input[placeholder*="User"]');
                     var passField = form.querySelector('input[type="password"]');
-                    var submitBtn = form.querySelector('input[type="submit"], button[type="submit"], button');
+                    var submitBtn = form.querySelector('input[type="submit"], button[type="submit"], button, input[value*="Login"], input[value*="login"]');
                     
-                    if (userField && passField && !userField.value) {
+                    console.log('Form', index, '- User field:', !!userField, 'Pass field:', !!passField, 'Submit:', !!submitBtn);
+                    
+                    if (userField && passField) {
                         userField.value = username;
                         passField.value = password;
                         
-                        setTimeout(function() {
-                            if (submitBtn) submitBtn.click();
-                        }, 500);
+                        // Trigger change events
+                        userField.dispatchEvent(new Event('change', { bubbles: true }));
+                        passField.dispatchEvent(new Event('change', { bubbles: true }));
                         
-                        filled = true;
+                        console.log('Filled form', index, 'with credentials');
+                        
+                        setTimeout(function() {
+                            if (submitBtn) {
+                                submitBtn.click();
+                                console.log('Clicked submit button for form', index);
+                            } else {
+                                // Try submitting the form directly
+                                form.submit();
+                                console.log('Submitted form', index, 'directly');
+                            }
+                        }, 300);
                     }
                 });
-                
-                if (filled || attempts > 10) clearInterval(interval);
-            }, 2000);
-        } catch (e) {
-            console.log('Cross-origin iframe access blocked, using postMessage approach');
-            // Fallback to postMessage if direct access is blocked
-            iframe.contentWindow.postMessage({
-                type: 'mmvcs_auth',
-                username: username,
-                password: password
-            }, '*');
-        }
-    }, 3000);
+            } catch (e) {
+                console.log('Cross-origin iframe access blocked at delay', delay, '- using postMessage');
+                iframe.contentWindow.postMessage({
+                    type: 'mmvcs_auth',
+                    username: username,
+                    password: password
+                }, '*');
+            }
+        }, delay);
+    });
 }
 
 // Check for credentials every 3 seconds
