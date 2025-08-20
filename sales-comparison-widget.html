@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Sales Comparison - MMVCS</title>
+<style>
+body { font-family: Arial, sans-serif; margin: 0; padding: 20px; }
+.header { text-align: center; margin-bottom: 20px; }
+.status { padding: 10px; background: #e7f3ff; border-left: 4px solid #007bff; margin-bottom: 20px; }
+</style>
+</head>
+<body>
+<div class="header">
+    <h2>Sales Comparison - This Year vs Last Year</h2>
+</div>
+
+<div class="status" id="status">Loading widget and authenticating...</div>
+
+<div id="widget-container"></div>
+
+<script>
+function autoAuthenticate() {
+    const username = localStorage.getItem('mmvcs_user');
+    const password = localStorage.getItem('mmvcs_pass');
+    
+    if (!username || !password) {
+        document.getElementById('status').innerHTML = '❌ No credentials found. <a href="simple-login.html">Please login first</a>';
+        return;
+    }
+    
+    document.getElementById('status').innerHTML = '🔐 Authenticating as ' + username + '...';
+    
+    // Try to find and fill login forms repeatedly
+    let attempts = 0;
+    const maxAttempts = 20;
+    
+    const fillForm = setInterval(() => {
+        attempts++;
+        const forms = document.querySelectorAll('form');
+        
+        console.log(`Attempt ${attempts}: Found ${forms.length} forms`);
+        
+        let authenticated = false;
+        
+        forms.forEach((form, index) => {
+            const userField = form.querySelector('input[type="text"], input[name*="user"], input[name*="login"]');
+            const passField = form.querySelector('input[type="password"]');
+            const submitBtn = form.querySelector('input[type="submit"], button[type="submit"], button');
+            
+            if (userField && passField && !userField.value) {
+                console.log(`Filling form ${index} with credentials`);
+                
+                userField.value = username;
+                passField.value = password;
+                
+                // Trigger events
+                userField.dispatchEvent(new Event('change', { bubbles: true }));
+                passField.dispatchEvent(new Event('input', { bubbles: true }));
+                
+                setTimeout(() => {
+                    if (submitBtn) {
+                        submitBtn.click();
+                        console.log('Clicked submit button');
+                    } else {
+                        form.submit();
+                        console.log('Submitted form directly');
+                    }
+                }, 500);
+                
+                document.getElementById('status').innerHTML = '✅ Authentication submitted';
+                authenticated = true;
+            }
+        });
+        
+        if (authenticated || attempts >= maxAttempts) {
+            clearInterval(fillForm);
+            if (attempts >= maxAttempts && !authenticated) {
+                document.getElementById('status').innerHTML = '⚠️ No login form found - widget may already be authenticated';
+            }
+        }
+    }, 1000);
+}
+
+// Load the Caspio widget
+document.getElementById('widget-container').innerHTML = '<script src="https://c0acv999.caspio.com/dp/01217000201cfed888f24342b18f/emb"><\/script>';
+
+// Start authentication after widget loads
+setTimeout(autoAuthenticate, 3000);
+</script>
+</body>
+</html>
