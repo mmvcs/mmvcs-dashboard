@@ -189,7 +189,7 @@ function broadcastAuthentication(username, password) {
 
 function sendToDashboard(username, password) {
     var credentials = btoa(username + ':' + password);
-    var dashboardUrl = 'https://dashboard.mmvcs-sales.com/direct-dashboard.html?auth=' + encodeURIComponent(credentials);
+    var dashboardUrl = 'https://dashboard.mmvcs-sales.com?auth=' + encodeURIComponent(credentials);
     
     try {
         window.open(dashboardUrl, '_blank');
