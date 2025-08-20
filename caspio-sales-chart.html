@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Sales Chart Widget</title>
+<style>
+body { margin: 0; padding: 0; font-family: Arial, sans-serif; }
+</style>
+</head>
+<body>
+
+<script src="https://c0acv999.caspio.com/dp/0121700013fadbf0a2db4aca8f73/emb"></script>
+
+<script>
+// Auto-authentication when credentials are available
+function autoAuthenticate() {
+    try {
+        var username = window.parent.localStorage.getItem('mmvcs_user');
+        var password = window.parent.localStorage.getItem('mmvcs_pass');
+        
+        if (!username || !password) {
+            username = localStorage.getItem('mmvcs_user');
+            password = localStorage.getItem('mmvcs_pass');
+        }
+        
+        if (username && password) {
+            setTimeout(function() {
+                var forms = document.querySelectorAll('form');
+                forms.forEach(function(form) {
+                    var userField = form.querySelector('input[type="text"], input[name*="user"], input[name*="login"]');
+                    var passField = form.querySelector('input[type="password"]');
+                    var submitBtn = form.querySelector('input[type="submit"], button[type="submit"], button');
+                    
+                    if (userField && passField && !userField.value) {
+                        userField.value = username;
+                        passField.value = password;
+                        
+                        setTimeout(function() {
+                            if (submitBtn) submitBtn.click();
+                        }, 500);
+                    }
+                });
+            }, 3000);
+        }
+    } catch (e) {
+        console.log('Authentication error:', e);
+    }
+}
+
+// Listen for authentication messages
+window.addEventListener('message', function(event) {
+    if (event.data && event.data.type === 'mmvcs_auth') {
+        localStorage.setItem('mmvcs_user', event.data.username);
+        localStorage.setItem('mmvcs_pass', event.data.password);
+        autoAuthenticate();
+    }
+});
+
+// Auto-authenticate on load
+setTimeout(autoAuthenticate, 2000);
+</script>
+</body>
+</html>
