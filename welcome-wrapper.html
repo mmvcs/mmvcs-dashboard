@@ -35,25 +35,31 @@ function fillForms() {
     var username = localStorage.getItem('mmvcs_user');
     var password = localStorage.getItem('mmvcs_pass');
     
+    console.log('Welcome widget fillForms called, username:', username ? 'found' : 'NOT FOUND');
+    
     if (!username || !password) {
         console.log('No credentials found for Welcome widget');
         return;
     }
     
     var attempts = 0;
-    var maxAttempts = 25; // More attempts for Welcome widget
+    var maxAttempts = 30; // Even more attempts
     var interval = setInterval(function() {
         attempts++;
         var forms = document.querySelectorAll('form');
+        console.log('Welcome widget attempt', attempts, 'found', forms.length, 'forms');
+        
         var filled = false;
         
-        forms.forEach(function(form) {
+        forms.forEach(function(form, formIndex) {
             var userField = form.querySelector('input[type="text"], input[name*="user"], input[name*="login"]');
             var passField = form.querySelector('input[type="password"]');
             var submitBtn = form.querySelector('input[type="submit"], button[type="submit"], button');
             
-            if (userField && passField && !userField.value) {
-                console.log('Filling Welcome widget form, attempt:', attempts);
+            console.log('Welcome form', formIndex, '- userField:', !!userField, 'passField:', !!passField, 'submitBtn:', !!submitBtn);
+            
+            if (userField && passField) {
+                console.log('Welcome widget filling form', formIndex, 'attempt:', attempts, 'current value:', userField.value);
                 userField.value = username;
                 passField.value = password;
                 
@@ -63,32 +69,40 @@ function fillForms() {
                     passField.dispatchEvent(new Event(eventType, { bubbles: true }));
                 });
                 
-                // Multiple submission attempts
-                setTimeout(function() {
-                    if (submitBtn) {
-                        submitBtn.click();
-                        console.log('Submitted Welcome widget form');
-                        
-                        // Also try form.submit()
-                        setTimeout(function() {
-                            if (form) form.submit();
-                        }, 200);
-                        
-                        // And trigger Enter key
-                        setTimeout(function() {
-                            passField.dispatchEvent(new KeyboardEvent('keydown', {
-                                key: 'Enter', code: 'Enter', which: 13, keyCode: 13, bubbles: true
-                            }));
-                        }, 400);
-                    }
-                }, 200); // Faster submission
+                // Immediate submission - be very aggressive
+                if (submitBtn) {
+                    console.log('Welcome widget clicking submit button');
+                    submitBtn.click();
+                    
+                    // Multiple submission methods immediately
+                    setTimeout(function() {
+                        if (form) {
+                            console.log('Welcome widget calling form.submit()');
+                            form.submit();
+                        }
+                    }, 100);
+                    
+                    // Enter key
+                    setTimeout(function() {
+                        console.log('Welcome widget sending Enter key');
+                        passField.dispatchEvent(new KeyboardEvent('keydown', {
+                            key: 'Enter', code: 'Enter', which: 13, keyCode: 13, bubbles: true
+                        }));
+                        passField.dispatchEvent(new KeyboardEvent('keypress', {
+                            key: 'Enter', code: 'Enter', which: 13, keyCode: 13, bubbles: true
+                        }));
+                    }, 150);
+                }
                 
                 filled = true;
             }
         });
         
-        if (filled || attempts > maxAttempts) clearInterval(interval);
-    }, 1000); // Check more frequently
+        if (filled || attempts > maxAttempts) {
+            console.log('Welcome widget stopping attempts at', attempts, 'filled:', filled);
+            clearInterval(interval);
+        }
+    }, 800); // Check even more frequently
 }
 
 // Check for credentials very frequently
