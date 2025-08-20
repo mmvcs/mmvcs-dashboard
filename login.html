@@ -11,29 +11,17 @@
     body {
       margin: 0; min-height: 100vh; display: grid; place-items: center;
       background: radial-gradient(1000px 600px at 10% 0%, #101838 0, #0b1020 50%, #070a16 100%);
-      color: var(--ink); font: 16px/1.4 system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji";
+      color: var(--ink); font: 16px/1.4 system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans";
     }
     .shell { width: min(720px, 92vw); padding: 28px; }
-    .card {
-      background: var(--card); border: 1px solid #263255; border-radius: 18px;
-      padding: 28px; box-shadow: 0 12px 40px rgba(0,0,0,.35);
-    }
+    .card { background: var(--card); border: 1px solid #263255; border-radius: 18px; padding: 28px; box-shadow: 0 12px 40px rgba(0,0,0,.35); }
     h1 { margin: 0 0 6px; font-size: clamp(22px, 4vw, 28px); }
     p.lead { margin: 0 0 18px; color: var(--muted); }
-    .btn {
-      display: inline-flex; gap: 10px; align-items: center; justify-content: center;
-      padding: 14px 18px; border-radius: 12px; text-decoration: none; font-weight: 600;
-      background: var(--brand); color: #06122b; box-shadow: 0 10px 24px rgba(59,130,246,.35);
-      transition: transform .06s ease, box-shadow .2s ease; will-change: transform;
-    }
-    .btn:hover { transform: translateY(-1px); box-shadow: 0 12px 28px rgba(59,130,246,.45); }
-    .btn:active { transform: translateY(0); box-shadow: 0 8px 20px rgba(59,130,246,.3); }
+    .btn { display:inline-flex; gap:10px; align-items:center; justify-content:center; padding:14px 18px; border-radius:12px; text-decoration:none; font-weight:600; background:var(--brand); color:#06122b; box-shadow:0 10px 24px rgba(59,130,246,.35); }
+    .btn:hover { filter: brightness(1.06); }
     .hint { margin-top: 14px; font-size: 13px; color: var(--muted); }
     .footer { margin-top: 22px; font-size: 12px; color: var(--muted); opacity: .9; }
-    .logo {
-      display:inline-flex; align-items:center; gap:10px; margin-bottom: 10px; color: var(--brand-ink);
-      text-transform: uppercase; letter-spacing: .12em; font-weight: 700; font-size: 12px;
-    }
+    .logo { display:inline-flex; align-items:center; gap:10px; margin-bottom: 10px; color: var(--brand-ink); text-transform: uppercase; letter-spacing: .12em; font-weight: 700; font-size: 12px; }
     .logo .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--brand); box-shadow: 0 0 0 6px rgba(59,130,246,.15); }
     .list { margin: 14px 0 0; padding-left: 18px; color: var(--muted); }
   </style>
@@ -45,31 +33,21 @@
       <h1>Sign in to view your Sales Dashboard</h1>
       <p class="lead">One secure login powers all widgets—no separate sign-ins.</p>
 
-      <!-- IMPORTANT:
-           If you later create a dedicated "Login Gate" DataPage, replace the ID below.
-           Current DP ID is your Welcome module: 01217000f2c3610f806e481a9264
-      -->
       <p>
         <a class="btn" target="_blank" rel="noopener"
-           href="https://caspio.mmvcs-sales.com/dp/01217000f2c3610f806e481a9264?dest=https%3A%2F%2Fdashboard.mmvcs-sales.com%2Fauth%2Ffinish%3Fopen%3D1">
+           href="https://mmv-dashboard-proxy.jeff-4b0.workers.dev/dp/01217000f2c3610f806e481a9264?dest=https%3A%2F%2Fdashboard.mmvcs-sales.com%2Fauth%2Ffinish%3Fopen%3D1">
           Continue to sign in
         </a>
       </p>
 
       <ul class="list">
         <li>Opens the secure Caspio sign-in in a new tab.</li>
-        <li>After you log in, you’ll be brought back here to your dashboard.</li>
+        <li>After you log in, you’ll be brought back to your dashboard.</li>
       </ul>
 
-      <div class="hint">Tip: If a popup blocker stops the new tab, allow popups for this site and click again.</div>
-      <div class="footer">Having trouble? Clear login: <a href="https://dashboard.mmvcs-sales.com/auth/hard-logout" style="color:var(--brand-ink)">sign out</a> and retry.</div>
+      <div class="hint">If a popup blocker stops the new tab, allow popups for this site and click again.</div>
+      <div class="footer">Trouble? Clear login: <a href="/auth/hard-logout" style="color:var(--brand-ink)">sign out</a> and retry.</div>
     </div>
   </div>
-
-  <noscript>
-    <div style="position:fixed;inset:0;display:grid;place-items:center;background:#0008;color:#fff">
-      JavaScript is required for secure sign-in.
-    </div>
-  </noscript>
 </body>
 </html>
