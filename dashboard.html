@@ -1,61 +1,65 @@
-<!DOCTYPE html>
-<html>
+<!doctype html>
+<html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>MMVCS Dashboard</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>MMV Sales Dashboard</title>
 <style>
-body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background: #f5f5f5; }
-.header { text-align: center; margin-bottom: 30px; }
-.widgets-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; max-width: 1400px; margin: 0 auto; }
-.widget-box { background: white; border-radius: 8px; padding: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-.widget-box h3 { margin-top: 0; color: #333; border-bottom: 2px solid #007bff; padding-bottom: 10px; }
-.widget-link { display: block; padding: 20px; background: #007bff; color: white; text-decoration: none; border-radius: 4px; text-align: center; margin-top: 10px; }
-.widget-link:hover { background: #0056b3; }
-.full-width { grid-column: span 2; }
+:root{--bg:#0b1020;--panel:#0f172a;--ink:#e7ecf7;--line:#263255}
+*{box-sizing:border-box}
+body{font-family:ui-sans-serif,system-ui,Segoe UI,Roboto,Helvetica,Arial;margin:0;background:var(--bg);color:var(--ink)}
+header{display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid var(--line);background:#0c1326;position:sticky;top:0;z-index:5}
+.brand{font-weight:800;letter-spacing:.2px}
+.cta{display:inline-block;padding:10px 12px;border-radius:10px;background:#263255;color:#fff;text-decoration:none;font-weight:600}
+main{padding:18px;max-width:1600px;margin:0 auto}
+.grid{display:grid;grid-template-columns:repeat(12,1fr);gap:16px}
+.card{grid-column:span 12;background:var(--panel);border:1px solid var(--line);border-radius:16px;overflow:hidden}
+@media(min-width:900px){.card.half{grid-column:span 6}}
+.card header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:#111a33;border-bottom:1px solid var(--line)}
+.card h2{font-size:1rem;margin:0}
+iframe{width:100%;height:520px;border:0;background:#fff}
 </style>
 </head>
 <body>
-<div class="header">
-    <h1>MMVCS Dashboard</h1>
-    <p>Click on any widget below to view your data</p>
-</div>
+<header>
+<div class="brand">MMV Sales Dashboard</div>
+<nav>
+<a class="cta" href="/auth/logout?dest=%2Flogin">Sign out</a>
+</nav>
+</header>
 
-<div class="widgets-grid">
-    <div class="widget-box full-width">
-        <h3>Welcome Dashboard</h3>
-        <a href="welcome-widget.html" class="widget-link" target="_blank">Open Welcome Dashboard</a>
-    </div>
-    
-    <div class="widget-box">
-        <h3>Sales Comparison</h3>
-        <p>This Year vs Last Year</p>
-        <a href="sales-comparison-widget.html" class="widget-link" target="_blank">View Sales Comparison</a>
-    </div>
-    
-    <div class="widget-box">
-        <h3>Sales Chart</h3>
-        <p>Monthly Sales Data</p>
-        <a href="sales-chart-widget.html" class="widget-link" target="_blank">View Sales Chart</a>
-    </div>
-    
-    <div class="widget-box">
-        <h3>Destination Mix - Current Year</h3>
-        <a href="destination-current-widget.html" class="widget-link" target="_blank">View Current Mix</a>
-    </div>
-    
-    <div class="widget-box">
-        <h3>Destination Mix - Last Year</h3>
-        <a href="destination-last-widget.html" class="widget-link" target="_blank">View Last Year Mix</a>
-    </div>
-</div>
 
-<script>
-// Check if user is logged in
-const username = localStorage.getItem('mmvcs_user');
-if (!username) {
-    alert('Please login first');
-    window.location.href = 'simple-login.html';
-}
-</script>
+<main>
+<div class="grid">
+<section class="card">
+<header><h2>Welcome Dashboard</h2></header>
+<iframe src="/caspio/dp/01217000f2c3610f806e481a9264" title="Welcome Dashboard"></iframe>
+</section>
+
+
+<section class="card half">
+<header><h2>Sales Comparison</h2></header>
+<iframe src="/caspio/dp/01217000201cfed888f24342b18f" title="Sales Comparison"></iframe>
+</section>
+
+
+<section class="card half">
+<header><h2>Sales Chart</h2></header>
+<iframe src="/caspio/dp/0121700013fadbf0a2db4aca8f73" title="Sales Chart"></iframe>
+</section>
+
+
+<section class="card half">
+<header><h2>Destination Mix · Current</h2></header>
+<iframe src="/caspio/dp/01217000564ddc00d2ab4c7aac4d" title="Destination Mix Current"></iframe>
+</section>
+
+
+<section class="card half">
+<header><h2>Destination Mix · Last Year</h2></header>
+<iframe src="/caspio/dp/01217000301880de360842d1adb1" title="Destination Mix Last Year"></iframe>
+</section>
+</div>
+</main>
 </body>
 </html>
