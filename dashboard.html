@@ -1,58 +1,65 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>MMV Sales Dashboard</title>
-  <style>
-    :root{--bg:#0b1020;--panel:#0f172a;--ink:#e7ecf7;--line:#263255}
-    *{box-sizing:border-box}
-    body{font-family:ui-sans-serif,system-ui,Segoe UI,Roboto,Helvetica,Arial;margin:0;background:var(--bg);color:var(--ink)}
-    header{display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid var(--line);background:#0c1326;position:sticky;top:0;z-index:5}
-    .brand{font-weight:800;letter-spacing:.2px}
-    .cta{display:inline-block;padding:10px 12px;border-radius:10px;background:#263255;color:#fff;text-decoration:none;font-weight:600}
-    main{padding:18px;max-width:1600px;margin:0 auto}
-    .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:16px}
-    .card{grid-column:span 12;background:var(--panel);border:1px solid var(--line);border-radius:16px;overflow:hidden}
-    @media(min-width:900px){.card.half{grid-column:span 6}}
-    .card header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:#111a33;border-bottom:1px solid var(--line)}
-    .card h2{font-size:1rem;margin:0}
-    iframe{width:100%;height:520px;border:0;background:#fff}
-  </style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>MMV Sales Dashboard</title>
+<style>
+:root{--bg:#0b1020;--panel:#0f172a;--ink:#e7ecf7;--line:#263255}
+*{box-sizing:border-box}
+body{font-family:ui-sans-serif,system-ui,Segoe UI,Roboto,Helvetica,Arial;margin:0;background:var(--bg);color:var(--ink)}
+header{display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid var(--line);background:#0c1326;position:sticky;top:0;z-index:5}
+.brand{font-weight:800;letter-spacing:.2px}
+.cta{display:inline-block;padding:10px 12px;border-radius:10px;background:#263255;color:#fff;text-decoration:none;font-weight:600}
+main{padding:18px;max-width:1600px;margin:0 auto}
+.grid{display:grid;grid-template-columns:repeat(12,1fr);gap:16px}
+.card{grid-column:span 12;background:var(--panel);border:1px solid var(--line);border-radius:16px;overflow:hidden}
+@media(min-width:900px){.card.half{grid-column:span 6}}
+.card header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:#111a33;border-bottom:1px solid var(--line)}
+.card h2{font-size:1rem;margin:0}
+iframe{width:100%;height:520px;border:0;background:#fff}
+</style>
 </head>
 <body>
-  <header>
-    <div class="brand">MMV Sales Dashboard</div>
-    <nav><a class="cta" href="/auth/logout?dest=%2Flogin">Sign out</a></nav>
-  </header>
+<header>
+<div class="brand">MMV Sales Dashboard</div>
+<nav>
+<a class="cta" href="/auth/logout?dest=%2Flogin">Sign out</a>
+</nav>
+</header>
 
-  <main>
-    <div class="grid">
-      <section class="card">
-        <header><h2>Welcome Dashboard</h2></header>
-        <iframe src="/caspio/dp/01217000f2c3610f806e481a9264" title="Welcome Dashboard"></iframe>
-      </section>
 
-      <section class="card half">
-        <header><h2>Sales Comparison</h2></header>
-        <iframe src="/caspio/dp/01217000201cfed888f24342b18f" title="Sales Comparison"></iframe>
-      </section>
+<main>
+<div class="grid">
+<section class="card">
+<header><h2>Welcome Dashboard</h2></header>
+<iframe src="/caspio/dp/01217000f2c3610f806e481a9264" title="Welcome Dashboard"></iframe>
+</section>
 
-      <section class="card half">
-        <header><h2>Sales Chart</h2></header>
-        <iframe src="/caspio/dp/0121700013fadbf0a2db4aca8f73" title="Sales Chart"></iframe>
-      </section>
 
-      <section class="card half">
-        <header><h2>Destination Mix · Current</h2></header>
-        <iframe src="/caspio/dp/01217000564ddc00d2ab4c7aac4d" title="Destination Mix Current"></iframe>
-      </section>
+<section class="card half">
+<header><h2>Sales Comparison</h2></header>
+<iframe src="/caspio/dp/01217000201cfed888f24342b18f" title="Sales Comparison"></iframe>
+</section>
 
-      <section class="card half">
-        <header><h2>Destination Mix · Last Year</h2></header>
-        <iframe src="/caspio/dp/01217000301880de360842d1adb1" title="Destination Mix Last Year"></iframe>
-      </section>
-    </div>
-  </main>
+
+<section class="card half">
+<header><h2>Sales Chart</h2></header>
+<iframe src="/caspio/dp/0121700013fadbf0a2db4aca8f73" title="Sales Chart"></iframe>
+</section>
+
+
+<section class="card half">
+<header><h2>Destination Mix · Current</h2></header>
+<iframe src="/caspio/dp/01217000564ddc00d2ab4c7aac4d" title="Destination Mix Current"></iframe>
+</section>
+
+
+<section class="card half">
+<header><h2>Destination Mix · Last Year</h2></header>
+<iframe src="/caspio/dp/01217000301880de360842d1adb1" title="Destination Mix Last Year"></iframe>
+</section>
+</div>
+</main>
 </body>
 </html>
