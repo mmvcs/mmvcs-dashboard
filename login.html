@@ -18,13 +18,20 @@
 <body>
   <div class="card">
     <h1>Sign in to view your sales dashboards</h1>
-    <p>You’ll be redirected to our secure Caspio sign-in. After login, you’ll come back here automatically.</p>
+    <p>You’ll be redirected to our secure Caspio sign-in. After login, we’ll finish authentication and open your dashboard.</p>
     <div class="actions">
-      <!-- Uses our proxy; Worker handles cookies and redirects -->
-      <a class="btn" href="/caspio/dp/01217000f2c3610f806e481a9264?dest=%2Fdashboard">Continue to sign in</a>
+      <!-- Opens Caspio sign-in in a NEW TAB, then the Worker finishes at /auth/finish and goes to /dashboard -->
+      <a class="btn"
+         target="_blank" rel="noopener"
+         href="/caspio/dp/01217000f2c3610f806e481a9264?dest=%2Fauth%2Ffinish%3Fopen%3D1">
+        Continue to sign in
+      </a>
       <a class="btn secondary" href="/dashboard">Skip</a>
     </div>
-    <div class="note">Tip: If you’re already signed in, the dashboard loads immediately.</div>
+    <div class="note">
+      If your browser blocks the new tab, allow pop-ups for this site or
+      <a href="/auth/finish?open=1" target="_blank" rel="noopener">click here to finish sign-in</a>.
+    </div>
   </div>
 </body>
 </html>
