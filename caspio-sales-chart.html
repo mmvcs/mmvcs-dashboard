@@ -38,15 +38,61 @@ function autoAuthenticate() {
             
             delays.forEach(function(delay) {
                 setTimeout(function() {
+                    // Try to find forms in this document first
                     var forms = document.querySelectorAll('form');
-                    console.log('Found', forms.length, 'forms in Caspio widget at delay', delay);
+                    console.log('Found', forms.length, 'forms in main Caspio widget at delay', delay);
                     
+                    // Also try to access forms in the nested iframe
+                    var caspioIframe = document.querySelector('iframe');
+                    if (caspioIframe) {
+                        try {
+                            var iframeDoc = caspioIframe.contentDocument || caspioIframe.contentWindow.document;
+                            var iframeForms = iframeDoc.querySelectorAll('form');
+                            console.log('Found', iframeForms.length, 'forms in nested Caspio iframe at delay', delay);
+                            
+                            // Process iframe forms
+                            iframeForms.forEach(function(form, index) {
+                                var userField = form.querySelector('input[type="text"], input[name*="user"], input[name*="login"], input[placeholder*="user"], input[placeholder*="User"]');
+                                var passField = form.querySelector('input[type="password"]');
+                                var submitBtn = form.querySelector('input[type="submit"], button[type="submit"], button, input[value*="Login"], input[value*="login"]');
+                                
+                                console.log('Nested Caspio form', index, '- User field:', !!userField, 'Pass field:', !!passField, 'Submit:', !!submitBtn);
+                                
+                                if (userField && passField) {
+                                    userField.value = username;
+                                    passField.value = password;
+                                    
+                                    // Trigger events
+                                    userField.dispatchEvent(new Event('change', { bubbles: true }));
+                                    userField.dispatchEvent(new Event('input', { bubbles: true }));
+                                    passField.dispatchEvent(new Event('change', { bubbles: true }));
+                                    passField.dispatchEvent(new Event('input', { bubbles: true }));
+                                    
+                                    console.log('Filled nested Caspio form', index, 'with credentials');
+                                    
+                                    setTimeout(function() {
+                                        if (submitBtn) {
+                                            submitBtn.click();
+                                            console.log('Clicked nested Caspio submit button for form', index);
+                                        } else {
+                                            form.submit();
+                                            console.log('Submitted nested Caspio form', index, 'directly');
+                                        }
+                                    }, 300);
+                                }
+                            });
+                        } catch (e) {
+                            console.log('Cannot access nested Caspio iframe at delay', delay, ':', e);
+                        }
+                    }
+                    
+                    // Process main document forms
                     forms.forEach(function(form, index) {
                         var userField = form.querySelector('input[type="text"], input[name*="user"], input[name*="login"], input[placeholder*="user"], input[placeholder*="User"]');
                         var passField = form.querySelector('input[type="password"]');
                         var submitBtn = form.querySelector('input[type="submit"], button[type="submit"], button, input[value*="Login"], input[value*="login"]');
                         
-                        console.log('Caspio form', index, '- User field:', !!userField, 'Pass field:', !!passField, 'Submit:', !!submitBtn);
+                        console.log('Main Caspio form', index, '- User field:', !!userField, 'Pass field:', !!passField, 'Submit:', !!submitBtn);
                         
                         if (userField && passField) {
                             userField.value = username;
@@ -58,15 +104,15 @@ function autoAuthenticate() {
                             passField.dispatchEvent(new Event('change', { bubbles: true }));
                             passField.dispatchEvent(new Event('input', { bubbles: true }));
                             
-                            console.log('Filled Caspio form', index, 'with credentials');
+                            console.log('Filled main Caspio form', index, 'with credentials');
                             
                             setTimeout(function() {
                                 if (submitBtn) {
                                     submitBtn.click();
-                                    console.log('Clicked Caspio submit button for form', index);
+                                    console.log('Clicked main Caspio submit button for form', index);
                                 } else {
                                     form.submit();
-                                    console.log('Submitted Caspio form', index, 'directly');
+                                    console.log('Submitted main Caspio form', index, 'directly');
                                 }
                             }, 300);
                         }
@@ -88,6 +134,18 @@ window.addEventListener('message', function(event) {
         console.log('Processing authentication message with user:', event.data.username);
         localStorage.setItem('mmvcs_user', event.data.username);
         localStorage.setItem('mmvcs_pass', event.data.password);
+        
+        // Also forward the message to the nested Caspio iframe
+        var caspioIframe = document.querySelector('iframe');
+        if (caspioIframe && caspioIframe.contentWindow) {
+            try {
+                caspioIframe.contentWindow.postMessage(event.data, '*');
+                console.log('Forwarded auth message to nested Caspio iframe');
+            } catch (e) {
+                console.log('Could not forward to nested iframe:', e);
+            }
+        }
+        
         autoAuthenticate();
     }
 });
