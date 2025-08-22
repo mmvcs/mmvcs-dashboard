@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Sign in | MMV Dashboard (Embed v2)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root { --bg:#0b1020; --card:#121932; --ink:#e7ecf7; --line:#263255; --muted:#9fb0d4; }
+    * { box-sizing:border-box }
+    body { margin:0; background:#0b1020; color:var(--ink); font:16px/1.4 system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial }
+    .wrap { padding:10px }
+    .card { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:12px }
+    .head { margin:0 0 8px; font-weight:700 }
+    iframe { width:100%; height:560px; border:0; background:#0a122a; display:block }
+    .hint { margin-top:8px; font-size:13px; color:var(--muted) }
+    .btn { display:inline-block; margin-top:8px; padding:10px 14px; background:#3b82f6; color:#06122b; border-radius:10px; text-decoration:none; font-weight:600 }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h2 class="head">Sign in to your MMV Dashboard</h2>
+
+      <!-- 👇 This shows the actual Caspio login form inside Zoho -->
+      <iframe
+        id="loginFrame"
+        src="https://caspio.mmvcs-sales.com/dp/<WELCOME_ZOHO_DP_ID>"
+        referrerpolicy="no-referrer">
+      </iframe>
+
+      <div class="hint">
+        If you finish sign-in and don’t see your dashboard automatically, click
+        <a class="btn" href="/dashboard" target="_blank" rel="noopener">Open Dashboard</a>.
+      </div>
+    </div>
+  </div>
+</body>
+</html>
