@@ -1,90 +1,156 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
   <title>MMV | Sales Dashboard</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta http-equiv="Cache-Control" content="no-store" />
+
+  <!-- Allow this page to iframe Caspio via your proxy host -->
+  <meta http-equiv="Content-Security-Policy" content="
+    default-src 'self' https://caspio.mmvcs-sales.com data: blob:;
+    frame-src https://caspio.mmvcs-sales.com;
+    connect-src 'self' https://caspio.mmvcs-sales.com;
+    script-src 'self' 'unsafe-inline';
+    style-src  'self' 'unsafe-inline';
+    img-src    'self' data: blob:;
+  ">
+
   <style>
-    :root { --bg:#0b1020; --card:#121932; --ink:#e7ecf7; --muted:#a3b2d6; --line:#263255; }
-    * { box-sizing: border-box; }
-    body { margin:0; background:#0b1020; color:var(--ink); font:16px/1.4 system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial; }
-    header { padding:18px 20px; border-bottom:1px solid var(--line); background:#111936; position:sticky; top:0; z-index:2; }
-    h1 { margin:0; font-size:clamp(20px,3.6vw,26px); }
-    .grid { display:grid; gap:18px; padding:18px; }
-    /* 1 large row (Welcome), then 2x2 tiles */
-    @media (min-width: 960px) {
-      .grid { grid-template-columns: 1fr 1fr; grid-auto-rows: minmax(340px, auto); }
-      .welcome { grid-column: 1 / -1; height: 420px; }
+    :root{
+      --bg:#0b1020; --card:#121932; --ink:#e7ecf7; --muted:#a7b8dc; --accent:#3b82f6; --line:#263255;
     }
-    @media (max-width: 959.98px) {
-      .welcome { height: 380px; }
+    html,body{height:100%}
+    body{
+      margin:0; background:var(--bg); color:var(--ink); font:16px/1.4 system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji","Segoe UI Emoji";
     }
-    .tile { background:var(--card); border:1px solid var(--line); border-radius:14px; overflow:hidden; }
-    .tile > iframe { width:100%; height:100%; border:0; display:block; background:#0a122a; }
-    .label { position:absolute; left:-9999px; } /* purely decorative heading, hidden from layout */
-    .footer { padding:10px 18px 24px; color:var(--muted); font-size:13px; }
-    a { color:#cfe1ff; }
+    header{
+      padding:14px 18px; border-bottom:1px solid var(--line); background:rgba(18,25,50,.7);
+      position:sticky; top:0; backdrop-filter: blur(6px);
+      display:flex; align-items:center; gap:12px;
+    }
+    header .dot{width:10px; height:10px; border-radius:50%; background:var(--accent)}
+    header h1{margin:0; font-size:18px; letter-spacing:.2px}
+    .wrap{max-width:1300px; margin:18px auto; padding:0 16px}
+
+    /* Grid layout */
+    .grid{
+      display:grid; gap:16px;
+      grid-template-columns: repeat(12, 1fr);
+    }
+
+    /* Card/tile base */
+    .tile{
+      background:var(--card);
+      border:1px solid var(--line);
+      border-radius:16px;
+      padding:12px 12px 8px;
+      position:relative;
+      overflow:hidden;
+      box-shadow:0 10px 30px rgba(0,0,0,.25);
+    }
+    .tile .label{
+      position:absolute; top:8px; left:12px;
+      font-size:12px; color:var(--muted); letter-spacing:.4px; text-transform:uppercase;
+      background:rgba(59,130,246,.08); border:1px solid rgba(59,130,246,.35);
+      padding:2px 6px; border-radius:999px;
+    }
+    .tile iframe{
+      width:100%; height:100%; border:0; background:#0a122a; border-radius:10px;
+    }
+
+    /* Sizes */
+    .welcome{ grid-column: span 12; height: 320px; }
+    .half    { grid-column: span 6;  height: 420px; }
+    .third   { grid-column: span 4;  height: 420px; }
+
+    /* Responsive */
+    @media (max-width: 1100px){
+      .third{ grid-column: span 6; }
+    }
+    @media (max-width: 780px){
+      .half, .third, .welcome{ grid-column: span 12; height: 360px; }
+    }
+
+    /* Small helper row for actions (optional) */
+    .actions{margin: 0 0 10px 0; display:flex; gap:10px; justify-content:flex-end}
+    .btn{
+      appearance:none; border:1px solid var(--line); background:#0f152c; color:var(--ink);
+      padding:8px 12px; border-radius:10px; cursor:pointer; font-size:14px;
+    }
+    .btn:hover{border-color:#3551a1}
   </style>
 </head>
 <body>
-  <header><h1>MMV Sales Dashboard</h1></header>
+  <header>
+    <div class="dot"></div>
+    <h1>MMV Sales Dashboard</h1>
+  </header>
 
-  <main class="grid">
-    <!-- WELCOME (full-width) -->
-    <section class="tile welcome">
-      <span class="label">Welcome</span>
-      <iframe
-        src="https://caspio.mmvcs-sales.com/dp/01217000f2c3610f806e481a9264"
-        referrerpolicy="no-referrer"
-        loading="eager"
-        allow="clipboard-read; clipboard-write">
-      </iframe>
-    </section>
+  <div class="wrap">
+    <div class="actions">
+      <!-- Optional: clear auth on proxy host quickly -->
+      <a class="btn" href="https://caspio.mmvcs-sales.com/__logout">Sign out (reset)</a>
+    </div>
 
-    <!-- SALES COMPARISON -->
-    <section class="tile">
-      <span class="label">Sales Comparison</span>
-      <iframe
-        src="https://caspio.mmvcs-sales.com/dp/01217000e5578e948cf143a781b0"
-        referrerpolicy="no-referrer"
-        loading="eager">
-      </iframe>
-    </section>
+    <main class="grid">
+      <!-- WELCOME (full-width) -->
+      <section class="tile welcome">
+        <span class="label">Welcome</span>
+        <iframe
+          src="https://caspio.mmvcs-sales.com/dp/01217000f2c3610f806e481a9264"
+          referrerpolicy="no-referrer"
+          loading="eager"
+          allow="clipboard-read; clipboard-write">
+        </iframe>
+      </section>
 
-    <!-- SALES CHART -->
-    <section class="tile">
-      <span class="label">Sales Chart</span>
-      <iframe
-        src="https://caspio.mmvcs-sales.com/dp/0121700008f2787684ac423fa8b4"
-        referrerpolicy="no-referrer"
-        loading="eager">
-      </iframe>
-    </section>
+      <!-- SALES COMPARISON (half) -->
+      <section class="tile half">
+        <span class="label">Sales Comparison</span>
+        <iframe
+          src="https://caspio.mmvcs-sales.com/dp/01217000201cfed888f24342b18f"
+          referrerpolicy="no-referrer"
+          loading="eager"
+          allow="clipboard-read; clipboard-write">
+        </iframe>
+      </section>
 
-    <!-- DESTINATION MIX (CURRENT) -->
-    <section class="tile">
-      <span class="label">Destination Mix (Current)</span>
-      <iframe
-        src="https://caspio.mmvcs-sales.com/dp/0121700047bb4f57086d4b9d9065"
-        referrerpolicy="no-referrer"
-        loading="eager">
-      </iframe>
-    </section>
+      <!-- SALES CHART (half) -->
+      <section class="tile half">
+        <span class="label">Sales Chart</span>
+        <iframe
+          src="https://caspio.mmvcs-sales.com/dp/0121700013fadbf0a2db4aca8f73"
+          referrerpolicy="no-referrer"
+          loading="eager"
+          allow="clipboard-read; clipboard-write">
+        </iframe>
+      </section>
 
-    <!-- DESTINATION MIX (LAST YEAR) -->
-    <section class="tile">
-      <span class="label">Destination Mix (Last Year)</span>
-      <iframe
-        src="https://caspio.mmvcs-sales.com/dp/01217000b193a9f4e2014718a2aa"
-        referrerpolicy="no-referrer"
-        loading="eager">
-      </iframe>
-    </section>
-  </main>
+      <!-- DESTINATION MIX — Current (third) -->
+      <section class="tile third">
+        <span class="label">Destination Mix — Current</span>
+        <iframe
+          src="https://caspio.mmvcs-sales.com/dp/01217000564ddc00d2ab4c7aac4d"
+          referrerpolicy="no-referrer"
+          loading="eager"
+          allow="clipboard-read; clipboard-write">
+        </iframe>
+      </section>
 
-  <div class="footer">
-    Having trouble? Try <a href="/auth/hard-logout">signing out</a> and sign in again.
+      <!-- DESTINATION MIX — Last Year (third) -->
+      <section class="tile third">
+        <span class="label">Destination Mix — Last Year</span>
+        <iframe
+          src="https://caspio.mmvcs-sales.com/dp/01217000301880de360842d1adb1"
+          referrerpolicy="no-referrer"
+          loading="eager"
+          allow="clipboard-read; clipboard-write">
+        </iframe>
+      </section>
+
+      <!-- Filler to keep grid balanced on large screens -->
+      <section class="tile third" style="display:none"></section>
+    </main>
   </div>
 </body>
 </html>
