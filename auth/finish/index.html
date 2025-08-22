@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Finishing sign-in…</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta http-equiv="Cache-Control" content="no-store" />
+  <style>
+    :root { --bg:#0b1020; --card:#121932; --ink:#e7ecf7; --muted:#a3b2d6; --line:#263255; --brand:#3b82f6; }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; min-height: 100vh; display: grid; place-items: center;
+      background: radial-gradient(1000px 600px at 10% 0%, #101838 0, #0b1020 50%, #070a16 100%);
+      color: var(--ink); font: 16px/1.4 system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans";
+    }
+    .card {
+      background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 28px;
+      width: min(680px, 92vw); text-align: center; box-shadow: 0 12px 40px rgba(0,0,0,.35);
+    }
+    h1 { margin: 0 0 6px; font-size: clamp(22px, 4vw, 28px); }
+    p  { margin: 8px 0; color: var(--muted); }
+    .spinner{width:28px;height:28px;border:3px solid #263255;border-top-color:var(--brand);
+      border-radius:50%;margin:14px auto;animation:s 1s linear infinite}
+    @keyframes s{to{transform:rotate(1turn)}}
+    .hidden { position: absolute; left: -9999px; top: -9999px; width: 0; height: 0; border: 0; }
+    a { color: #cfe1ff; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Finishing sign-in…</h1>
+    <div class="spinner"></div>
+    <p>We’re warming up your widgets so your dashboard opens already signed in.</p>
+    <p class="small">This usually takes ~2–3 seconds.</p>
+  </div>
+
+  <script>
+  // ⬇️ Replace these later with your NEW Zoho-auth DataPage URLs on caspio.mmvcs-sales.com
+  const PRIME_URLS = [
+    "https://caspio.mmvcs-sales.com/dp/REPLACE_WELCOME_ID",
+    "https://caspio.mmvcs-sales.com/dp/REPLACE_SALES_COMPARISON_ID",
+    "https://caspio.mmvcs-sales.com/dp/REPLACE_SALES_CHART_ID",
+    "https://caspio.mmvcs-sales.com/dp/REPLACE_DESTINATION_CURRENT_ID",
+    "https://caspio.mmvcs-sales.com/dp/REPLACE_DESTINATION_LASTYEAR_ID",
+  ];
+
+  (function(){
+    const target = "/dashboard";
+    let remaining = PRIME_URLS.length, jumped = false;
+
+    function go() {
+      if (jumped) return;
+      jumped = true;
+      location.replace(target);
+    }
+
+    // Safety timeout in case some iframes don't fire onload
+    const safety = setTimeout(go, 3500);
+
+    PRIME_URLS.forEach(src => {
+      const f = document.createElement('iframe');
+      f.className = 'hidden';
+      f.loading = 'eager';
+      f.referrerPolicy = 'no-referrer';
+      f.src = src;
+      f.onload = () => {
+        if (--remaining <= 0) {
+          clearTimeout(safety);
+          go();
+        }
+      };
+      document.body.appendChild(f);
+    });
+  })();
+  </script>
+
+  <noscript>
+    <div style="position:fixed;inset:0;display:grid;place-items:center;background:#0008;color:#fff;padding:20px;text-align:center">
+      JavaScript is required to complete sign-in. <br />
+      <a href="/dashboard">Continue to your dashboard</a>
+    </div>
+  </noscript>
+</body>
+</html>
