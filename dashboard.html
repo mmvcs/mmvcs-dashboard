@@ -5,63 +5,52 @@
   <title>MMV | Sales Dashboard</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-  <!-- This page will be served under https://caspio.mmvcs-sales.com -->
-  <!-- Allow iframes from same host -->
+  <!-- Served under https://caspio.mmvcs-sales.com -->
+  <!-- Allow scripts/requests from our proxy host -->
   <meta http-equiv="Content-Security-Policy" content="
     default-src 'self' https://caspio.mmvcs-sales.com data: blob:;
-    frame-src 'self' https://caspio.mmvcs-sales.com;
+    script-src  'self' 'unsafe-inline' 'unsafe-eval' https://caspio.mmvcs-sales.com;
+    style-src   'self' 'unsafe-inline';
+    img-src     'self' data: blob:;
     connect-src 'self' https://caspio.mmvcs-sales.com;
-    script-src 'self' 'unsafe-inline';
-    style-src  'self' 'unsafe-inline';
-    img-src    'self' data: blob:;
+    frame-src   'self' https://caspio.mmvcs-sales.com;
   ">
 
   <style>
-    :root{
-      --bg:#ffffff; --card:#ffffff; --ink:#111827; --muted:#4b5563; --accent:#1f6feb; --line:#e5e7eb;
-    }
+    :root{ --bg:#ffffff; --card:#ffffff; --ink:#111827; --muted:#4b5563; --accent:#1f6feb; --line:#e5e7eb; }
     html,body{height:100%}
-    body{
-      margin:0; background:var(--bg); color:var(--ink);
-      font:16px/1.4 system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans";
-    }
-    header{
-      padding:14px 18px; border-bottom:1px solid var(--line); background:#ffffff;
-      position:sticky; top:0; display:flex; align-items:center; gap:12px; z-index:10;
-    }
+    body{ margin:0; background:var(--bg); color:var(--ink); font:16px/1.4 system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial; }
+    header{ padding:14px 18px; border-bottom:1px solid var(--line); background:#fff; position:sticky; top:0; display:flex; gap:12px; align-items:center; z-index:10; }
     header .dot{width:10px; height:10px; border-radius:50%; background:var(--accent)}
-    header h1{margin:0; font-size:18px; letter-spacing:.2px}
-    .wrap{max-width:1300px; margin:18px auto; padding:0 16px}
+    header h1{margin:0; font-size:18px}
+    .wrap{ max-width:1300px; margin:18px auto; padding:0 16px; }
 
     .grid{ display:grid; gap:16px; grid-template-columns: repeat(12, 1fr); }
-
     .tile{
-      background:var(--card); border:1px solid var(--line); border-radius:14px; padding:12px 12px 8px;
-      position:relative; overflow:hidden; box-shadow:0 4px 12px rgba(0,0,0,.06);
+      background:var(--card); border:1px solid var(--line); border-radius:14px; padding:12px;
+      position:relative; overflow:hidden; box-shadow:0 4px 12px rgba(0,0,0,.06); min-height:240px;
     }
     .tile .label{
       position:absolute; top:8px; left:12px; font-size:12px; color:var(--muted); letter-spacing:.4px;
       text-transform:uppercase; background:#f3f4f6; border:1px solid var(--line); padding:2px 6px; border-radius:999px;
     }
-    .tile iframe{ width:100%; height:100%; border:0; background:#fff; border-radius:10px; }
 
-    .welcome{ grid-column: span 12; height: 320px; }
-    .half    { grid-column: span 6;  height: 420px; }
-    .third   { grid-column: span 4;  height: 420px; }
+    .welcome{ grid-column: span 12; min-height:320px; }
+    .half    { grid-column: span 6;  min-height:420px; }
+    .third   { grid-column: span 4;  min-height:420px; }
 
-    @media (max-width: 1100px){ .third{ grid-column: span 6; } }
-    @media (max-width: 780px){ .half, .third, .welcome{ grid-column: span 12; height: 360px; } }
+    @media (max-width:1100px){ .third{ grid-column: span 6; } }
+    @media (max-width:780px){ .half, .third, .welcome{ grid-column: span 12; min-height:360px; } }
 
-    .actions{margin: 0 0 10px 0; display:flex; gap:10px; justify-content:flex-end}
+    .actions{margin:0 0 10px; display:flex; gap:10px; justify-content:flex-end}
     .btn{ appearance:none; border:1px solid var(--line); background:#fff; color:var(--ink);
-      padding:8px 12px; border-radius:10px; cursor:pointer; font-size:14px; }
+      padding:8px 12px; border-radius:10px; cursor:pointer; font-size:14px; text-decoration:none; }
     .btn:hover{border-color:#cbd5e1}
   </style>
 </head>
 <body>
   <header>
-    <div class="dot"></div>
-    <h1>MMV Sales Dashboard</h1>
+    <div class="dot"></div><h1>MMV Sales Dashboard</h1>
   </header>
 
   <div class="wrap">
@@ -70,59 +59,39 @@
     </div>
 
     <main class="grid">
-      <!-- WELCOME (full-width) -->
+      <!-- WELCOME (script embed) -->
       <section class="tile welcome">
         <span class="label">Welcome</span>
-        <iframe
-          src="https://caspio.mmvcs-sales.com/dp/01217000f2c3610f806e481a9264"
-          referrerpolicy="no-referrer"
-          loading="eager"
-          allow="clipboard-read; clipboard-write">
-        </iframe>
+        <div id="welcome"></div>
+        <script src="https://caspio.mmvcs-sales.com/dp/01217000f2c3610f806e481a9264/emb"></script>
       </section>
 
-      <!-- SALES COMPARISON (half) -->
+      <!-- SALES COMPARISON (script embed) -->
       <section class="tile half">
         <span class="label">Sales Comparison</span>
-        <iframe
-          src="https://caspio.mmvcs-sales.com/dp/01217000201cfed888f24342b18f"
-          referrerpolicy="no-referrer"
-          loading="eager"
-          allow="clipboard-read; clipboard-write">
-        </iframe>
+        <div id="sales-comparison"></div>
+        <script src="https://caspio.mmvcs-sales.com/dp/01217000201cfed888f24342b18f/emb"></script>
       </section>
 
-      <!-- SALES CHART (half) -->
+      <!-- SALES CHART (script embed) -->
       <section class="tile half">
         <span class="label">Sales Chart</span>
-        <iframe
-          src="https://caspio.mmvcs-sales.com/dp/0121700013fadbf0a2db4aca8f73"
-          referrerpolicy="no-referrer"
-          loading="eager"
-          allow="clipboard-read; clipboard-write">
-        </iframe>
+        <div id="sales-chart"></div>
+        <script src="https://caspio.mmvcs-sales.com/dp/0121700013fadbf0a2db4aca8f73/emb"></script>
       </section>
 
-      <!-- DESTINATION MIX — Current (third) -->
+      <!-- DESTINATION MIX — Current (script embed) -->
       <section class="tile third">
         <span class="label">Destination Mix — Current</span>
-        <iframe
-          src="https://caspio.mmvcs-sales.com/dp/01217000564ddc00d2ab4c7aac4d"
-          referrerpolicy="no-referrer"
-          loading="eager"
-          allow="clipboard-read; clipboard-write">
-        </iframe>
+        <div id="mix-current"></div>
+        <script src="https://caspio.mmvcs-sales.com/dp/01217000564ddc00d2ab4c7aac4d/emb"></script>
       </section>
 
-      <!-- DESTINATION MIX — Last Year (third) -->
+      <!-- DESTINATION MIX — Last Year (script embed) -->
       <section class="tile third">
         <span class="label">Destination Mix — Last Year</span>
-        <iframe
-          src="https://caspio.mmvcs-sales.com/dp/01217000301880de360842d1adb1"
-          referrerpolicy="no-referrer"
-          loading="eager"
-          allow="clipboard-read; clipboard-write">
-        </iframe>
+        <div id="mix-last-year"></div>
+        <script src="https://caspio.mmvcs-sales.com/dp/01217000301880de360842d1adb1/emb"></script>
       </section>
 
       <section class="tile third" style="display:none"></section>
